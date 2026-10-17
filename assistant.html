@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="0xBASE — консольный инструктор ZeroTrace Academy. Зашифрованный чат-терминал с подключением к модели Hugging Face и жёстким протоколом DEFENSIVE_ONLY.">
+<meta name="theme-color" content="#050505">
+<title>[0XTRACE] // ИИ_ТЕРМИНАЛ :: 0xBASE</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Локальные дополнения страницы ИИ-терминала. */
+  .cfg-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--gap); }
+  @media (max-width: 900px) { .cfg-grid { grid-template-columns: minmax(0,1fr); } }
+  .token-state { font-size: 12px; letter-spacing: .08em; }
+  .token-state[data-state="placeholder"] { color: var(--amber); }
+  .token-state[data-state="local"]       { color: var(--green); }
+  .token-state[data-state="error"]       { color: var(--red); }
+  .term__log .msg:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body class="booting">
+
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация ИИ-терминала"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> Терминал 0xBASE полностью зависит от JavaScript. Без него страница
+    остаётся только описанием протокола.
+  </div>
+</noscript>
+
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">node/0xbase</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> TLS 1.3 &middot; ENC SESSION &middot; <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">[ГЛАВНАЯ]</a></li>
+      <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
+      <li class="active"><a href="assistant.html" aria-current="page">[ИИ_ТЕРМИНАЛ]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <section aria-labelledby="page-title">
+    <h1 id="page-title" class="glitch" data-text="[ ИИ_ТЕРМИНАЛ ] // ЯДРО 0xBASE" tabindex="0">[ ИИ_ТЕРМИНАЛ ] // ЯДРО 0xBASE</h1>
+
+<pre class="ascii-art ascii-art--amber" aria-label="Заголовок 0xBASE">
+    ___     \\    \\   ____       ___       ____     ______   
+   / \ \     \\  /\   |  _ \     / \ \     / ___\   |  ____\  
+  | | | |     \\\\    | |_) |   |  _  |    \___ \   |  |__    
+  | |_| |     \/\\    |  _ <    | | | |     ___) |  |  ___\   
+    \___/   \\    \\  |____/    |_| |_|    |____/   |______\  
+</pre>
+
+    <div class="warning-box mt2">
+      <strong>[ПРОТОКОЛ DEFENSIVE_ONLY]</strong> Ядро 0xBASE — не «дружелюбный ассистент».
+      Это консольный лог-анализатор и инструктор: ответы начинаются с технической сути и
+      помечаются префиксами <code>[PROCESS]:</code>, <code>[COMMAND]:</code>, <code>[HINT]:</code>.
+      Запросы на боевой эксплойт, рабочий фишинг или атаку на реального человека
+      блокируются на уровне системной инструкции.
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       ТЕРМИНАЛ
+       ============================================================== -->
+  <section aria-labelledby="term-title">
+    <h2 id="term-title" class="sr-only">Окно обмена с ядром 0xBASE</h2>
+
+    <div class="term" id="terminal">
+      <div class="term__bar">
+        <span class="title">+-- 0xBASE :: secure console ---------------------------------+</span>
+        <span>
+          model: <strong class="green" id="bar-model">meta-llama/Meta-Llama-3-8B-Instruct</strong>
+          &middot; <span class="state" id="bar-state" data-state="idle">IDLE</span>
+        </span>
+      </div>
+
+      <div class="term__log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"
+           aria-label="Журнал обмена с 0xBASE" tabindex="0"></div>
+
+      <div class="chipbar" id="chipbar" aria-label="Быстрые запросы">
+        <button type="button" class="chip" data-q="Как проверить свой цифровой след по никнейму?">никнейм-разведка</button>
+        <button type="button" class="chip" data-q="Объясни, как читать метаданные PDF через exiftool.">метаданные PDF</button>
+        <button type="button" class="chip" data-q="Что такое SQL-инъекция и как от неё защититься?">sql-инъекция</button>
+        <button type="button" class="chip" data-q="Как распознать фишинговое письмо?">фишинг-защита</button>
+        <button type="button" class="chip" data-q="Как вычислить точку съёмки по тени и углу солнца?">хронолокация</button>
+        <button type="button" class="chip" data-q="Составь чек-лист аудита веб-приложения по OWASP Top 10.">owasp чек-лист</button>
+      </div>
+
+      <div class="term__input">
+        <span class="term__prompt" aria-hidden="true">operator@0xtrace:~$</span>
+        <label class="sr-only" for="chat-input">Запрос к ядру 0xBASE</label>
+        <input type="text" id="chat-input" autocomplete="off" spellcheck="false"
+               placeholder="введите запрос и нажмите EXEC или Enter..." aria-describedby="chat-log">
+        <button type="button" id="exec-btn" class="btn">[ EXEC ]</button>
+        <button type="button" id="clear-btn" class="btn btn--ghost btn--sm" title="Очистить окно и историю">[ CLEAR ]</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       КОНФИГУРАЦИЯ ПОДКЛЮЧЕНИЯ
+       ============================================================== -->
+  <section aria-labelledby="cfg-title">
+    <h2 id="cfg-title" class="glitch" data-text="[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С МОДЕЛЬЮ" tabindex="0">[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С МОДЕЛЬЮ</h2>
+
+    <div class="cfg-grid">
+      <div class="panel">
+        <div class="panel-title">
+          <span class="rule">+---</span><span>HF TOKEN</span><span class="rule">---+</span>
+          <span class="path">runtime override</span>
+        </div>
+        <p style="font-size:13px" class="mb1">
+          Токен зашит в код константой <code>HF_TOKEN</code>. Для локальной отладки его можно
+          переопределить здесь — значение сохранится <strong>только в вашем браузере</strong>
+          (localStorage) и никуда не отправляется, кроме самого запроса к Hugging Face.
+        </p>
+        <div class="field">
+          <label for="token-input">HF_TOKEN (начинается с <code>hf_</code>)</label>
+          <input type="text" id="token-input" autocomplete="off" spellcheck="false"
+                 placeholder="hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+        </div>
+        <div class="row">
+          <button type="button" id="save-token" class="btn btn--sm">[ СОХРАНИТЬ ]</button>
+          <button type="button" id="drop-token" class="btn btn--sm btn--ghost">[ УДАЛИТЬ ЛОКАЛЬНЫЙ ]</button>
+          <button type="button" id="test-link" class="btn btn--sm btn--amber">[ ПРОВЕРИТЬ КАНАЛ ]</button>
+        </div>
+        <p class="token-state mt1" id="token-state" data-state="placeholder" role="status">
+          [СТАТУС]: используется значение из исходного кода (заглушка).
+        </p>
+      </div>
+
+      <div class="panel" style="border-color:var(--red-dim)">
+        <div class="panel-title" style="color:var(--red);border-bottom-color:var(--red-dim)">
+          <span class="rule" style="color:var(--red-dim)">+---</span><span>SECURITY NOTICE</span><span class="rule" style="color:var(--red-dim)">---+</span>
+        </div>
+        <p style="font-size:13px" class="mb1">
+          <strong class="red">Не публикуйте реальный токен в клиентском коде.</strong>
+          Любой посетитель страницы увидит его в исходнике и сможет израсходовать вашу квоту.
+          Правильная схема для продакшена:
+        </p>
+        <ol style="font-size:13px" class="mb1">
+          <li>Клиент шлёт запрос на <strong>свой</strong> прокси (Cloudflare Worker, Vercel/Netlify
+              Function, Deno Deploy) — без токена в URL и в теле.</li>
+          <li>Прокси добавляет заголовок <code>Authorization</code>, ограничивает origin,
+              частоту (rate limit) и длину запроса.</li>
+          <li>Токен живёт в переменной окружения сервера, а не в репозитории.</li>
+          <li>В <code>.gitignore</code> — <code>.env</code>, в истории коммитов — проверка секретов
+              (gitleaks / trufflehog).</li>
+        </ol>
+        <p style="font-size:13px" class="mb0 dim">
+          Дополнительно: браузерный вызов <code>api-inference.huggingface.co</code> может быть
+          отклонён CORS — это ожидаемо. В таком случае терминал автоматически переходит в
+          <strong>OFFLINE-режим</strong> и отвечает локальным движком, сохраняя формат протокола.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       СИСТЕМНАЯ ИНСТРУКЦИЯ (прозрачность)
+       ============================================================== -->
+  <section aria-labelledby="sysprompt-title">
+    <h2 id="sysprompt-title" class="glitch" data-text="[ SYSTEM INSTRUCTIONS ] // ЧТО ЗАШИТО В ЯДРО" tabindex="0">[ SYSTEM INSTRUCTIONS ] // ЧТО ЗАШИТО В ЯДРО</h2>
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>system_prompt.txt</span><span class="rule">---+</span>
+        <span class="path">messages[0].role = "system"</span>
+      </div>
+<pre class="evidence" id="sysprompt-view"></pre>
+      <p class="dim mb0" style="font-size:12.5px">
+        Инструкция отправляется первым элементом массива <code>messages</code> при каждом запросе,
+        поэтому поведение ядра не «вымывается» длинной перепиской.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // Терминал 0xBASE. Запросы уходят напрямую в API
+    Hugging Face по защищённому каналу; история переписки хранится только в памяти вкладки.
+    Протокол DEFENSIVE_ONLY действует всегда.
+  </div>
+  <div class="nowrap">
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   0xBASE :: КЛИЕНТ ТЕРМИНАЛА
+   --------------------------------------------------------------------------
+   Архитектура:
+     1. SYSTEM_PROMPT жёстко зашит и всегда уходит messages[0].
+     2. callHuggingFace() — fetch к Serverless Inference API (chat-completions).
+     3. При отсутствии токена / ошибке сети / CORS — offlineEngine(),
+        локальный детерминированный движок, сохраняющий формат протокола.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ========================================================================
+     1. КОНСТАНТЫ ПОДКЛЮЧЕНИЯ
+     ======================================================================== */
+
+  // >>> ЗАМЕНИТЕ НА СВОЙ ТОКЕН (https://huggingface.co/settings/tokens) <<<
+  // ВНИМАНИЕ: токен в клиентском коде виден всем посетителям страницы.
+  // Для публичного деплоя используйте серверный прокси (см. SECURITY NOTICE).
+  const HF_TOKEN = "ЗАМЕНИ_НА_СВОЙ_ТОКЕН_HUGGING_FACE";
+
+  const HF_MODEL     = "meta-llama/Meta-Llama-3-8B-Instruct";
+  const HF_ENDPOINT  = "https://api-inference.huggingface.co/models/" + HF_MODEL + "/v1/chat/completions";
+  const HF_FALLBACKS = [
+    "https://api-inference.huggingface.co/models/" + HF_MODEL + "/v1/chat/completions",
+    "https://router.huggingface.co/v1/chat/completions",
+    "https://api-inference.huggingface.co/models/" + HF_MODEL
+  ];
+  const REQUEST_TIMEOUT_MS = 45000;
+  const MAX_HISTORY_TURNS  = 8;   // сколько пар user/assistant держим в контексте
+  const TOKEN_KEY          = 'zt_hf_token_v1';
+  const PLACEHOLDER_TOKENS = ['ЗАМЕНИ_НА_СВОЙ_ТОКЕН_HUGGING_FACE', 'REPLACE_ME', '', 'HF_TOKEN'];
+
+  /* ========================================================================
+     2. СИСТЕМНЫЙ ПРОМПТ (ЖЁСТКАЯ ИНСТРУКЦИЯ ЯДРА)
+     ======================================================================== */
+  const SYSTEM_PROMPT =
+`Ты — 0xBASE, автономное теневое ядро и консольный инструктор портала ZeroTrace Academy. Ты не классический ИИ-помощник, ты — консольный лог-анализатор.
+1. Никогда не используй вежливые ИИ-шаблоны: "Рад помочь", "Конечно, давайте разберем", "Как ИИ, я...".
+2. Начинай ответы СРАЗУ со сути, технического отчета или структуры команд. Использовать префиксы: [PROCESS]:, [COMMAND]:, [HINT]:.
+3. Если пользователь просит написать боевой эксплойт, создать рабочий фишинг или взломать реального человека — выведи сообщение: "КРИТИЧЕСКАЯ ОШИБКА: Запрос нарушает протокол DEFENSIVE_ONLY. Действие заблокировано." и затем кратко объясни теорию, как от этой угрозы защищаются в рамках этичного хакинга.
+Формат вывода: короткие строки, моноширинная логика, без markdown-заголовков и без эмодзи. Техническая точность важнее вежливости.`;
+
+  /* ========================================================================
+     3. УТИЛИТЫ
+     ======================================================================== */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function stamp() {
+    var d = new Date();
+    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  function esc(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  var memoryStore = {};
+  var store = {
+    get: function (k) {
+      try { return window.localStorage.getItem(k); }
+      catch (e) { return Object.prototype.hasOwnProperty.call(memoryStore, k) ? memoryStore[k] : null; }
+    },
+    set: function (k, v) { try { window.localStorage.setItem(k, v); } catch (e) { memoryStore[k] = v; } },
+    remove: function (k) { try { window.localStorage.removeItem(k); } catch (e) { delete memoryStore[k]; } }
+  };
+
+  /* ========================================================================
+     4. ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
+     ======================================================================== */
+  var chatLog   = document.getElementById('chat-log');
+  var chatInput = document.getElementById('chat-input');
+  var execBtn   = document.getElementById('exec-btn');
+  var clearBtn  = document.getElementById('clear-btn');
+  var barState  = document.getElementById('bar-state');
+  var barModel  = document.getElementById('bar-model');
+  var tokenInput= document.getElementById('token-input');
+  var tokenState= document.getElementById('token-state');
+  var sysView   = document.getElementById('sysprompt-view');
+
+  if (barModel) { barModel.textContent = HF_MODEL; }
+  if (sysView)  { sysView.textContent = SYSTEM_PROMPT; }
+
+  /* ========================================================================
+     5. СОСТОЯНИЕ КАНАЛА
+     ======================================================================== */
+  function setState(name) {
+    if (!barState) { return; }
+    var map = {
+      idle:    ['IDLE',        'idle'],
+      busy:    ['EXECUTING',   'busy'],
+      online:  ['ONLINE',      'idle'],
+      offline: ['OFFLINE-CORE','offline'],
+      error:   ['LINK ERROR',  'error']
+    };
+    var cfg = map[name] || map.idle;
+    barState.textContent = cfg[0];
+    barState.setAttribute('data-state', cfg[1]);
+  }
+
+  function isPlaceholder(token) {
+    if (!token) { return true; }
+    var t = String(token).trim();
+    return PLACEHOLDER_TOKENS.indexOf(t) !== -1 || t.length < 12;
+  }
+
+  function activeToken() {
+    var local = store.get(TOKEN_KEY);
+    if (local && !isPlaceholder(local)) { return { token: local.trim(), source: 'local' }; }
+    if (!isPlaceholder(HF_TOKEN))       { return { token: String(HF_TOKEN).trim(), source: 'code' }; }
+    return { token: '', source: 'placeholder' };
+  }
+
+  function renderTokenState() {
+    if (!tokenState) { return; }
+    var info = activeToken();
+    if (info.source === 'local') {
+      tokenState.setAttribute('data-state', 'local');
+      tokenState.textContent = '[СТАТУС]: используется локальный токен (localStorage). Маска: ' +
+                               maskToken(info.token);
+    } else if (info.source === 'code') {
+      tokenState.setAttribute('data-state', 'local');
+      tokenState.textContent = '[СТАТУС]: используется токен из исходного кода. Маска: ' + maskToken(info.token);
+    } else {
+      tokenState.setAttribute('data-state', 'placeholder');
+      tokenState.textContent = '[СТАТУС]: токен не задан (заглушка). Терминал будет отвечать OFFLINE-ядром.';
+    }
+  }
+
+  function maskToken(t) {
+    if (!t) { return '—'; }
+    return t.slice(0, 4) + '…' + t.slice(-4) + ' (len ' + t.length + ')';
+  }
+
+  /* ========================================================================
+     6. ОТРИСОВКА СООБЩЕНИЙ
+     ======================================================================== */
+  function highlight(text) {
+    var s = esc(text);
+    s = s.replace(/\[PROCESS\]:/g,  '<span class="tag tag-proc">[PROCESS]:</span>');
+    s = s.replace(/\[COMMAND\]:/g,  '<span class="tag tag-cmd">[COMMAND]:</span>');
+    s = s.replace(/\[HINT\]:/g,     '<span class="tag tag-hint">[HINT]:</span>');
+    s = s.replace(/КРИТИЧЕСКАЯ ОШИБКА:?[^\n]*/g, function (m) { return '<span class="tag tag-crit">' + m + '</span>'; });
+    s = s.replace(/\[DEFENSIVE_ONLY\]:/g, '<span class="tag tag-crit">[DEFENSIVE_ONLY]:</span>');
+    s = s.replace(/`([^`\n]+)`/g, '<span class="tag">$1</span>');
+    return s;
+  }
+
+  function appendMessage(role, text, meta) {
+    if (!chatLog) { return null; }
+    var wrap = document.createElement('div');
+    wrap.className = 'msg msg--' + role;
+
+    var m = document.createElement('div');
+    m.className = 'msg__meta';
+    var who = role === 'user' ? 'operator' : (role === 'sys' ? 'system' : '0xBASE');
+    m.textContent = '[' + (meta || stamp()) + '] ' + who + (role === 'ai' ? ' >>' : ' <<');
+
+    var body = document.createElement('div');
+    body.className = 'msg__body';
+    body.innerHTML = highlight(text);
+
+    wrap.appendChild(m);
+    wrap.appendChild(body);
+    chatLog.appendChild(wrap);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return wrap;
+  }
+
+  function appendTyping() {
+    var wrap = appendMessage('ai', 'обработка запроса', stamp());
+    if (wrap) {
+      wrap.id = 'typing-row';
+      wrap.querySelector('.msg__body').innerHTML =
+        '<span class="typing-dots">декомпозиция запроса</span>';
+    }
+    return wrap;
+  }
+  function removeTyping() {
+    var el = document.getElementById('typing-row');
+    if (el && el.parentNode) { el.parentNode.removeChild(el); }
+  }
+
+  /* ========================================================================
+     7. ИСТОРИЯ КОНТЕКСТА
+     ======================================================================== */
+  var history = [];   // [{role:'user'|'assistant', content:'...'}]
+
+  function buildMessages(userText) {
+    var messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+    var tail = history.slice(-MAX_HISTORY_TURNS * 2);
+    for (var i = 0; i < tail.length; i++) { messages.push(tail[i]); }
+    messages.push({ role: 'user', content: userText });
+    return messages;
+  }
+
+  /* ========================================================================
+     8. РАЗБОР ОТВЕТА API (несколько возможных форматов)
+     ======================================================================== */
+  function extractText(data) {
+    if (!data) { return ''; }
+    if (typeof data === 'string') { return data; }
+    if (data.choices && data.choices.length) {
+      var c = data.choices[0];
+      if (c.message && typeof c.message.content === 'string') { return c.message.content; }
+      if (typeof c.text === 'string') { return c.text; }
+      if (c.delta && typeof c.delta.content === 'string') { return c.delta.content; }
+    }
+    if (Array.isArray(data) && data.length) { return extractText(data[0]); }
+    if (typeof data.generated_text === 'string') { return data.generated_text; }
+    if (Array.isArray(data.generated_text)) {
+      /* старый text-generation формат: [[{role,content},...]] */
+      var out = [];
+      for (var i = 0; i < data.generated_text.length; i++) {
+        var part = data.generated_text[i];
+        if (part && typeof part.content === 'string') { out.push(part.content); }
+      }
+      return out.join('\n');
+    }
+    if (typeof data.output === 'string') { return data.output; }
+    if (typeof data.error === 'string') { return ''; }
+    return '';
+  }
+
+  function extractError(data) {
+    if (!data) { return ''; }
+    if (typeof data.error === 'string') { return data.error; }
+    if (data.error && typeof data.error === 'object') {
+      return data.error.message || data.error.code || JSON.stringify(data.error);
+    }
+    if (typeof data.message === 'string') { return data.message; }
+    return '';
+  }
+
+  /* ========================================================================
+     9. ЗАПРОС К HUGGING FACE SERVERLESS API
+     ======================================================================== */
+  async function callHuggingFace(messages, token) {
+    var controller = new AbortController();
+    var timer = window.setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
+
+    var body = {
+      model: HF_MODEL,
+      messages: messages,
+      max_tokens: 700,
+      temperature: 0.35,
+      top_p: 0.9,
+      return_full_text: false,
+      options: { wait_for_model: true, use_cache: false }
+    };
+
+    try {
+      var response = await fetch(HF_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+        mode: 'cors',
+        cache: 'no-store'
+      });
+
+      var raw = await response.text();
+      var data = null;
+      try { data = raw ? JSON.parse(raw) : null; } catch (e) { data = { error: raw.slice(0, 300) }; }
+
+      if (!response.ok) {
+        var errText = extractError(data) || ('HTTP ' + response.status);
+        var hint = '';
+        if (response.status === 401 || response.status === 403) {
+          hint = 'токен недействителен или нет доступа к модели (gated model: примите лицензию в профиле HF).';
+        } else if (response.status === 404) {
+          hint = 'модель не найдена по этому эндпоинту — проверьте HF_MODEL / имя Inference Provider.';
+        } else if (response.status === 429) {
+          hint = 'исчерпан лимит запросов (rate limit / квота).';
+        } else if (response.status === 503 || response.status === 504) {
+          hint = 'модель холодная или недоступна (wait_for_model не помог).';
+        }
+        throw new Error(errText + (hint ? ' :: ' + hint : ''));
+      }
+
+      var text = extractText(data);
+      if (!text) {
+        throw new Error('пустой ответ модели: ' + (raw ? raw.slice(0, 220) : 'нет тела'));
+      }
+      return text.trim();
+    } catch (err) {
+      if (err && err.name === 'AbortError') {
+        throw new Error('таймаут ' + (REQUEST_TIMEOUT_MS / 1000) + 'с — модель не ответила');
+      }
+      if (err instanceof TypeError) {
+        throw new Error('сеть/CORS недоступны из браузера (' + err.message + '). ' +
+                        'Для публичного деплоя нужен серверный прокси.');
+      }
+      throw err;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
+  /* ========================================================================
+     10. ЛОКАЛЬНАЯ ПРОВЕРКА НАРУШЕНИЯ ПРОТОКОЛА
+     ------------------------------------------------------------------
+     Дублирует пункт 3 системного промпта на клиенте: даже если модель
+     ответит иначе, запрос категории «атака на реального человека»
+     получает блокировку и оборонительный разбор.
+     ======================================================================== */
+  var FORBIDDEN_PATTERNS = [
+    /напиши\s+(боевой\s+)?эксплойт/i,
+    /(создай|сделай|сгенерируй|напиши)[\s\S]{0,30}(фишинг|фишингов|клон\s+(банка|сайта|страницы))/i,
+    /(взломай|взломать|сломай|пробей)[\s\S]{0,40}(человек|лицо|его|её|ее|бывш|сосед|коллега|жену|мужа|аккаунт\s+\S+@|почту|телеграм|инстаграм|телефон)/i,
+    /(подбери|брутфорс|brute[\s-]?force|перебери)\s+(пароль|пароли)\s+(от|у|к)?\s*(реальн|чуж|конкретн)/i,
+    /(ddos|ддос)[\s\S]{0,30}(сайта|сервера|на\s+сайт|атак)/i,
+    /(слежк|отследи|вычисли)\s+(за|по)\s+(человек|ним|ней|лицом|девушк|парн)/i,
+    /(купил|найти|где\s+взять)\s+(базы\s+данных|пробив|слив\s+баз)/i,
+    /(write|give|build|create)[\s\S]{0,30}(working\s+exploit|ransomware|keylogger|phishing\s+(page|kit))/i,
+    /(hack|break\s+into)[\s\S]{0,30}(someone|person|his|her|their)\s*(account|phone|email)?/i
+  ];
+
+  function violatesProtocol(text) {
+    for (var i = 0; i < FORBIDDEN_PATTERNS.length; i++) {
+      if (FORBIDDEN_PATTERNS[i].test(text)) { return true; }
+    }
+    return false;
+  }
+
+  var BLOCK_REPLY =
+'КРИТИЧЕСКАЯ ОШИБКА: Запрос нарушает протокол DEFENSIVE_ONLY. Действие заблокировано.\n' +
+'[PROCESS]: классификация запроса -> наступательное действие против реальной цели без письменного разрешения владельца.\n' +
+'[PROCESS]: наступательная ветка отключена. Разрешена только оборонительная.\n' +
+'[HINT]: теория защиты от этого вектора:\n' +
+'  1. Эксплойты и вредоносные payloads нейтрализуются не запретом знания, а уменьшением поверхности атаки: обновления, минимальные привилегии, сегментация.\n' +
+'  2. Фишинг лечится технологически и организационно: SPF+DKIM+DMARC с политикой reject, FIDO2-ключи вместо паролей, запрет передачи кодов, регламент проверки канала.\n' +
+'  3. Целевая слежка пресекается гигиеной данных: раздельные идентичности, очистка метаданных, контроль разрешений приложений, отказ от публикации геометрии кадра.\n' +
+'  4. Любой тест на проникновение легален только в границах письменного scope-документа: цели, окно, стоп-слово, ответственный.\n' +
+'[COMMAND]: переформулируйте запрос в оборонительной постановке: "как обнаружить", "как закрыть", "как научить сотрудников распознавать".';
+
+  /* ========================================================================
+     11. OFFLINE-ЯДРО (детерминированный локальный движок)
+     ------------------------------------------------------------------
+     Работает без токена и без сети. Отвечает в том же формате протокола.
+     ======================================================================== */
+  var KB = [
+    {
+      keys: ['ник', 'nick', 'username', 'maigeta', 'maiget', 'sherlock', 'аккаунт', 'профиль'],
+      reply:
+'[PROCESS]: задача -> установление пересечений никнейма по открытым площадкам.\n' +
+'[COMMAND]: sherlock <username> --csv --top-sites --timeout 10\n' +
+'[COMMAND]: maigret <username> -a --html --pdf --top-sites\n' +
+'[PROCESS]: порядок верификации совпадений:\n' +
+'  1. дата регистрации и возраст аккаунта;\n' +
+'  2. аватар -> perceptual hash, а не визуальное сравнение;\n' +
+'  3. стиль текста, повторяющиеся обороты, часовой пояс активности;\n' +
+'  4. пересечения подписок и списков друзей;\n' +
+'  5. упоминания ника на других площадках (поиск по строке ника).\n' +
+'[HINT]: совпадение ника — гипотеза, а не факт: ник могут занять. Вывод делается только по двум независимым признакам.\n' +
+'[HINT]: контрмера — раздельные идентичности для работы и личной жизни плюс периодическая проверка собственного следа.\n' +
+'[HINT]: архивная практика: удалённый профиль часто живёт в кэше и в Wayback Machine.'
+    },
+    {
+      keys: ['метадан', 'exif', 'exiftool', 'pdf', 'документ', 'xmp'],
+      reply:
+'[PROCESS]: задача -> извлечение и интерпретация метаданных файла.\n' +
+'[COMMAND]: sha256sum document.pdf        # фиксация улики до анализа\n' +
+'[COMMAND]: cp -p document.pdf work.pdf   # работаем только с копией\n' +
+'[COMMAND]: exiftool -a -u -G1 work.pdf\n' +
+'[COMMAND]: exiftool -json work.pdf > meta.json\n' +
+'[COMMAND]: strings -n 8 work.pdf | grep -iE "user|home|temp"\n' +
+'[PROCESS]: приоритет полей: Author / Last Modified By / Creator Tool / Producer / Create Date / Metadata Date / пути во временных каталогах.\n' +
+'[PROCESS]: проверка подделки: Create Date позже Modify Date, расхождение часовых поясов, отсутствие истории редактирования -> метаданные переписаны.\n' +
+'[COMMAND]: exiftool -all= clean.pdf      # контрмера: очистка перед публикацией\n' +
+'[HINT]: метаданные — утверждение файла о себе. Без независимого подтверждения (журнал DLP, VCS, трекер) это гипотеза.'
+    },
+    {
+      keys: ['sql', 'инъекц', 'injection', 'база данных', 'database', 'owasp'],
+      reply:
+'[PROCESS]: класс A03:2021 Injection. Причина — конкатенация пользовательских строк в тексте запроса.\n' +
+'[PROCESS]: механика: payload закрывает кавычку, добавляет тождественно истинное условие и отсекает остаток комментарием.\n' +
+'[COMMAND]: grep -rn "\"SELECT\\|\'SELECT\\|+ *req\\.\\|% *(" --include=*.js --include=*.py .   # поиск конкатенации\n' +
+'[COMMAND]: python3 -c "import sqlfluff" ; npm audit ; pip-audit   # статический контроль зависимостей\n' +
+'[PROCESS]: лечение по слоям:\n' +
+'  1. параметризованные запросы / prepared statements — единственный настоящий фикс;\n' +
+'  2. валидация входа по белому списку (тип, длина, алфавит);\n' +
+'  3. учётка БД с минимальными привилегиями (без DROP/GRANT);\n' +
+'  4. хранение паролей: argon2id или bcrypt, никогда MD5 и не plaintext;\n' +
+'  5. одинаковый ответ на любую неудачу входа — нет oracle для перебора;\n' +
+'  6. журнал неудачных попыток и алерты на серии;\n' +
+'  7. WAF как последний слой, а не замена исправленного запроса.\n' +
+'[HINT]: экранирование кавычек фиксом не является — оно зависит от кодировки и контекста.\n' +
+'[HINT]: практический стенд -> cybersec.html, там же чек-лист OWASP Top 10.'
+    },
+    {
+      keys: ['фишинг', 'phishing', 'социальн', 'soceng', 'письм', 'мошенник', 'вишинг', 'претекст'],
+      reply:
+'[PROCESS]: разбор вектора социальной инженерии в оборонительной постановке.\n' +
+'[PROCESS]: признаки письма, которые проверяются без перехода по ссылкам:\n' +
+'  1. Return-Path и SPF/DKIM/DMARC в служебных заголовках — домен отправителя vs домен организации;\n' +
+'  2. гомоглифы и опечатки в домене (o/0, rn/m, лишний дефис);\n' +
+'  3. давление сроком и требованием секретности — обязательный компонент атаки;\n' +
+'  4. запрос кода, пароля, перевода или «срочной оплаты счёта»;\n' +
+'  5. несовпадение текста ссылки и видимого адреса (наведение курсора);\n' +
+'  6. вложения с двойным расширением и макросами.\n' +
+'[COMMAND]: dig txt _dmarc.example.com ; dig mx example.com   # проверка политики домена\n' +
+'[PROCESS]: организационные контрмеры:\n' +
+'  1. DMARC p=reject + отчёты rua;\n' +
+'  2. FIDO2-ключи, отказ от SMS как второго фактора;\n' +
+'  3. правило двух каналов: любой финансовый запрос подтверждается звонком на известный номер;\n' +
+'  4. кнопка «сообщить о фишинге» без наказания за ложное срабатывание;\n' +
+'  5. тренировки по согласованному плану и только с ведома работодателя.\n' +
+'[DEFENSIVE_ONLY]: изготовление фишинговых страниц, клонов интерфейсов и рассылок порталом не рассматривается.'
+    },
+    {
+      keys: ['гео', 'geo', 'локац', 'координат', 'тень', 'солнц', 'suncalc', 'фото', 'отражен', 'снимок'],
+      reply:
+'[PROCESS]: хронолокация -> восстановление точки и времени съёмки по геометрии кадра.\n' +
+'[COMMAND]: exiftool image.jpg                  # шаг 0: метаданные (часто вычищены)\n' +
+'[COMMAND]: h = atan(height_object / len_shadow)  # высота солнца по тени\n' +
+'[COMMAND]: azimuth_shadow -> azimuth_sun = (azimuth_shadow + 180) mod 360\n' +
+'[PROCESS]: обратная задача в SunCalc: фиксируем дату, подбираем широту, при которой высота солнца равна измеренной.\n' +
+'[PROCESS]: долгота уточняется через момент местного солнечного полудня и смещение от UTC.\n' +
+'[PROCESS]: вторичные признаки: архитектурный стиль и этажность, тип мостовых конструкций, дорожные знаки и разметка, растительность, номера машин, направление движения.\n' +
+'[COMMAND]: реверс-поиск по фрагменту (обрезать уникальную конструкцию), а не по всему кадру\n' +
+'[HINT]: поправка на наклон поверхности обязательна — заваленный стол даёт ошибку в несколько градусов, то есть десятки километров.\n' +
+'[HINT]: глянцевые поверхности (керамика, стекло, очки, экраны) работают как второй объектив и сохраняют силуэты даже после очистки EXIF.'
+    },
+    {
+      keys: ['чек-лист', 'чеклист', 'checklist', 'аудит', 'audit', 'pentest', 'тест на проникновен'],
+      reply:
+'[PROCESS]: минимальный чек-лист аудита веб-приложения.\n' +
+'[COMMAND]: 00. письменное разрешение владельца: scope, окно, стоп-слово, контакты.\n' +
+'[COMMAND]: 01. инвентаризация: публичные эндпоинты, версии, сертификаты, заголовки.\n' +
+'[COMMAND]: 02. A01 Broken Access Control: доступ к чужим объектам, прямые URL админки, IDOR.\n' +
+'[COMMAND]: 03. A02 Crypto: TLS 1.2+, хранение паролей (argon2id/bcrypt), отсутствие секретов в коде.\n' +
+'[COMMAND]: 04. A03 Injection: параметризованные запросы, конкатенация в коде, NoSQL-операторы в JSON.\n' +
+'[COMMAND]: 05. A05 Misconfig: debug в проде, .git/.env в webroot, дефолтные учётки, автоиндекс.\n' +
+'[COMMAND]: 06. A06 Components: SBOM, pip-audit / npm audit, даты последних обновлений.\n' +
+'[COMMAND]: 07. A07 AuthN: rate limit, lockout, длина сессии, MFA, одинаковый ответ на неудачу.\n' +
+'[COMMAND]: 08. A09 Logging: что пишется, куда уходит, нет ли в логах паролей и токенов.\n' +
+'[COMMAND]: 09. A10 SSRF: белый список адресов, запрет 169.254.169.254 и внутренних подсетей.\n' +
+'[HINT]: каждой находке — критичность, воспроизводимый шаг, владелец и срок. Без этого отчёт не закрывается.'
+    },
+    {
+      keys: ['флаг', 'flag', 'кейс', 'case', 'расследован'],
+      reply:
+'[PROCESS]: формат флага портала -> FLAG{...}. Регистр и пробелы при проверке нормализуются.\n' +
+'[PROCESS]: активные дела архива:\n' +
+'  CASE-001 "Исчезнувший эдвайзер"    -> класс: nickname resolution, сложность СРЕДНИЙ;\n' +
+'  CASE-002 "Инсайдерский слив"        -> класс: file forensics / metadata, сложность ВЫСОКИЙ;\n' +
+'  CASE-003 "Геолокация по отражению"  -> класс: GEOINT / chronolocation, сложность ЭКСПЕРТНЫЙ.\n' +
+'[HINT]: порядок работы с любым делом: дамп улик -> наблюдения без интерпретаций -> гипотезы -> перекрёстная проверка -> вывод с уровнем уверенности.\n' +
+'[HINT]: ответы в архиве не публикуются намеренно: ценность представляет ход расследования, а не строка флага.\n' +
+'[COMMAND]: откройте cases.html и читайте блок "МЕТОДИКА" после второй неудачной попытки.'
+    },
+    {
+      keys: ['пароль', 'password', '2fa', 'mfa', 'безопасн', 'защит', 'гигиен', 'приватн', 'аноним'],
+      reply:
+'[PROCESS]: базовая гигиена защиты учётных записей.\n' +
+'[COMMAND]: менеджер паролей -> уникальные 16+ символьные пароли на каждый сервис\n' +
+'[COMMAND]: FIDO2 / аппаратный ключ -> второй фактор, устойчивый к фишингу\n' +
+'[PROCESS]: SMS-коды — слабый второй фактор: перехват через соц. инженерию оператора и SIM-swap.\n' +
+'[PROCESS]: проверка компрометации: Have I Been Pwned по хешу (k-анонимность), а не по логину.\n' +
+'[COMMAND]: включите оповещения о новых входах на почте и в банковских приложениях\n' +
+'[PROCESS]: разделение контуров: рабочая почта, личная почта, «одноразовая» почта для регистраций.\n' +
+'[HINT]: приватность начинается не с шифрования, а с уменьшения объёма данных, которые вы отдаёте добровольно.\n' +
+'[HINT]: резервные коды восстановления храните офлайн, а не в облаке рядом с аккаунтом.'
+    },
+    {
+      keys: ['0xbas', 'ты кто', 'кто ты', 'что ты умеешь', 'возможност', 'help', 'помощ', 'команд'],
+      reply:
+'[PROCESS]: идентификация -> 0xBASE, консольный инструктор и лог-анализатор ZeroTrace Academy.\n' +
+'[PROCESS]: поддерживаемые направления запросов:\n' +
+'  1. OSINT: никнейм-разведка, метаданные, GEOINT и хронолокация, поисковые операторы, верификация;\n' +
+'  2. Кибербезопасность: классы уязвимостей OWASP Top 10, аудит конфигураций, журналирование, реагирование;\n' +
+'  3. Социальная инженерия: признаки атаки, регламенты, обучение сотрудников, защита человеческого фактора.\n' +
+'[COMMAND]: формат вопроса, дающий лучший результат -> "как обнаружить X" / "как закрыть X" / "объясни механику X".\n' +
+'[DEFENSIVE_ONLY]: боевые эксплойты, рабочий фишинг, атаки на конкретных лиц и покупка/использование утечек баз — блокируются.\n' +
+'[HINT]: практические стенды портала -> cases.html (3 дела) и cybersec.html (симулятор инъекции).'
+    }
+  ];
+
+  var DEFAULT_REPLY =
+'[PROCESS]: запрос принят. Классификация -> общий технический вопрос по направлениям портала.\n' +
+'[PROCESS]: OFFLINE-ядро работает на локальной базе знаний и отвечает без обращения к модели.\n' +
+'[COMMAND]: уточните направление: OSINT | метаданные | GEOINT | SQL/OWASP | фишинг | аудит | пароли | флаги.\n' +
+'[HINT]: чем конкретнее постановка ("как обнаружить", "какие поля проверить", "какая контрмера"), тем плотнее ответ.\n' +
+'[HINT]: для живого ответа модели задайте HF_TOKEN в блоке "КОНФИГУРАЦИЯ" или в константе исходного кода.';
+
+  function offlineReply(userText) {
+    if (violatesProtocol(userText)) { return BLOCK_REPLY; }
+    var lower = userText.toLowerCase();
+    var best = null, bestScore = 0;
+
+    for (var i = 0; i < KB.length; i++) {
+      var score = 0;
+      for (var k = 0; k < KB[i].keys.length; k++) {
+        if (lower.indexOf(KB[i].keys[k].toLowerCase()) !== -1) { score++; }
+      }
+      if (score > bestScore) { bestScore = score; best = KB[i]; }
+    }
+    return best ? best.reply : DEFAULT_REPLY;
+  }
+
+  /* ========================================================================
+     12. ОСНОВНОЙ ЦИКЛ ОТПРАВКИ
+     ======================================================================== */
+  var busy = false;
+
+  async function exec() {
+    if (busy) { return; }
+    var text = chatInput ? chatInput.value.trim() : '';
+    if (!text) {
+      appendMessage('sys', '[ОШИБКА ВВОДА]: пустой запрос. Введите вопрос и нажмите EXEC.', stamp());
+      if (chatInput) { chatInput.focus(); }
+      return;
+    }
+    if (text.length > 1200) { text = text.slice(0, 1200); }
+
+    busy = true;
+    if (execBtn) { execBtn.disabled = true; }
+    setState('busy');
+
+    appendMessage('user', text, stamp());
+    if (chatInput) { chatInput.value = ''; }
+
+    var info = activeToken();
+    var messages = buildMessages(text);
+    var answer = null;
+    var viaOffline = false;
+    var failureReason = '';
+
+    /* --- клиентская проверка протокола (пункт 3 системной инструкции) --- */
+    if (violatesProtocol(text)) {
+      appendTyping();
+      await sleep(260);
+      removeTyping();
+      answer = BLOCK_REPLY;
+      viaOffline = true;
+      failureReason = 'локальный фильтр протокола DEFENSIVE_ONLY';
+    }
+    /* --- реальный запрос к модели --- */
+    else if (info.token) {
+      appendTyping();
+      try {
+        answer = await callHuggingFace(messages, info.token);
+      } catch (err) {
+        failureReason = (err && err.message) ? err.message : String(err);
+        removeTyping();
+        appendMessage('sys', '[LINK ERROR]: ' + failureReason, stamp());
+        appendMessage('sys', '[FALLBACK]: переключаюсь на OFFLINE-ядро. Формат протокола сохранён.', stamp());
+        appendTyping();
+        await sleep(220);
+        answer = offlineReply(text);
+        viaOffline = true;
+      }
+    }
+    /* --- токена нет: сразу локальное ядро --- */
+    else {
+      appendMessage('sys', '[LINK]: HF_TOKEN не задан (заглушка). Сетевой запрос не выполняется.', stamp());
+      appendTyping();
+      await sleep(240);
+      answer = offlineReply(text);
+      viaOffline = true;
+      failureReason = 'токен не задан';
+    }
+
+    removeTyping();
+    answer = cleanModelText(answer || '');
+    appendMessage('ai', answer || '[ОШИБКА]: пустой ответ ядра.', stamp());
+
+    /* история контекста — только для успешных сетевых диалогов и офлайн-ответов */
+    history.push({ role: 'user', content: text });
+    history.push({ role: 'assistant', content: answer });
+    if (history.length > MAX_HISTORY_TURNS * 2) {
+      history = history.slice(history.length - MAX_HISTORY_TURNS * 2);
+    }
+
+    setState(viaOffline ? 'offline' : 'online');
+    busy = false;
+    if (execBtn) { execBtn.disabled = false; }
+    if (chatInput) { chatInput.focus(); }
+
+    try { store.set('zt_last_query_v1', text); } catch (e) { /* noop */ }
+  }
+
+  function sleep(ms) {
+    return new Promise(function (res) { window.setTimeout(res, ms); });
+  }
+
+  /* Приводим ответ модели к консольному виду */
+  function cleanModelText(text) {
+    var s = String(text || '').trim();
+    s = s.replace(/^```[a-zA-Z]*\n?/gm, '').replace(/```$/gm, '');   // markdown-ограждения
+    s = s.replace(/^\s{0,3}#{1,6}\s+/gm, '');                        // markdown-заголовки
+    s = s.replace(/\*\*([^*]+)\*\*/g, '$1');                          // bold
+    s = s.replace(/(^|\n)\s*[-*]\s+/g, '$1  - ');                     // списки -> консольные
+    s = s.replace(/\n{3,}/g, '\n\n');
+    /* вырезаем вежливые ИИ-шаблоны, запрещённые пунктом 1 промпта */
+    var polite = [
+      /^\s*(рад помочь|конечно|безусловно|разумеется|хорошо|ок|okay|sure|certainly|of course)[!,.\s]*/i,
+      /как (искусственный интеллект|ии|языковая модель)[^.]*\./gi,
+      /i('| a)m (just )?an ai[^.]*\./gi,
+      /i cannot (help with that|assist)[^.]*\./gi
+    ];
+    for (var i = 0; i < polite.length; i++) { s = s.replace(polite[i], ''); }
+    /* если модель не поставила префикс — добавляем свой, чтобы протокол держался */
+    if (!/^\s*\[(PROCESS|COMMAND|HINT|DEFENSIVE_ONLY)\]:/i.test(s) &&
+        !/КРИТИЧЕСКАЯ ОШИБКА/.test(s)) {
+      s = '[PROCESS]: ' + s;
+    }
+    return s.trim();
+  }
+
+  /* ========================================================================
+     13. ПРОВЕРКА КАНАЛА (ping)
+     ======================================================================== */
+  async function testLink() {
+    var info = activeToken();
+    if (!info.token) {
+      appendMessage('sys', '[LINK TEST]: токен не задан. Нечем авторизоваться. Задайте HF_TOKEN.', stamp());
+      renderTokenState();
+      return;
+    }
+    setState('busy');
+    appendMessage('sys', '[LINK TEST]: probing ' + HF_ENDPOINT + ' (token ' + maskToken(info.token) + ')', stamp());
+    try {
+      var out = await callHuggingFace(
+        [{ role: 'system', content: SYSTEM_PROMPT },
+         { role: 'user', content: 'ping. Ответь одной строкой: [PROCESS]: канал установлен.' }],
+        info.token
+      );
+      appendMessage('sys', '[LINK TEST]: OK. Ответ модели получен.', stamp());
+      appendMessage('ai', cleanModelText(out), stamp());
+      setState('online');
+    } catch (err) {
+      appendMessage('sys', '[LINK TEST]: FAIL :: ' + ((err && err.message) || err), stamp());
+      appendMessage('sys', '[HINT]: типичные причины — gated-модель (нужно принять лицензию в профиле HF), CORS из браузера, истёкшая квота, неверное имя эндпоинта.', stamp());
+      setState('error');
+    }
+  }
+
+  /* ========================================================================
+     14. ОБВЯЗКА СОБЫТИЙ
+     ======================================================================== */
+  if (execBtn) { execBtn.addEventListener('click', exec); }
+  if (chatInput) {
+    chatInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); exec(); }
+    });
+  }
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      history = [];
+      if (chatLog) { chatLog.innerHTML = ''; }
+      greet();
+      setState(activeToken().token ? 'idle' : 'offline');
+    });
+  }
+  $all('#chipbar .chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      if (chatInput) {
+        chatInput.value = chip.getAttribute('data-q') || '';
+        chatInput.focus();
+      }
+    });
+  });
+
+  var saveTokenBtn = document.getElementById('save-token');
+  var dropTokenBtn = document.getElementById('drop-token');
+  var testLinkBtn  = document.getElementById('test-link');
+
+  if (saveTokenBtn) {
+    saveTokenBtn.addEventListener('click', function () {
+      var val = tokenInput ? tokenInput.value.trim() : '';
+      if (!val) {
+        if (tokenState) {
+          tokenState.setAttribute('data-state', 'error');
+          tokenState.textContent = '[СТАТУС]: пустое значение. Токен не сохранён.';
+        }
+        return;
+      }
+      if (!/^hf_[A-Za-z0-9]{10,}$/.test(val)) {
+        if (tokenState) {
+          tokenState.setAttribute('data-state', 'error');
+          tokenState.textContent = '[СТАТУС]: формат не похож на токен HF (ожидается hf_...). Значение всё равно сохранено локально.';
+        }
+      }
+      store.set(TOKEN_KEY, val);
+      if (tokenInput) { tokenInput.value = ''; }
+      renderTokenState();
+      appendMessage('sys', '[CONFIG]: HF_TOKEN сохранён локально в браузере. Источник: localStorage. Маска: ' + maskToken(val), stamp());
+      setState('idle');
+    });
+  }
+  if (dropTokenBtn) {
+    dropTokenBtn.addEventListener('click', function () {
+      store.remove(TOKEN_KEY);
+      renderTokenState();
+      appendMessage('sys', '[CONFIG]: локальный HF_TOKEN удалён. Возврат к значению из исходного кода.', stamp());
+      setState(activeToken().token ? 'idle' : 'offline');
+    });
+  }
+  if (testLinkBtn) { testLinkBtn.addEventListener('click', testLink); }
+
+  /* ========================================================================
+     15. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ======================================================================== */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+  var BOOT_LINES = [
+    ['ok',   'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain','POST ......................... <span class="ok">[ OK ]</span>'],
+    ['ok',   'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',   'link :: ' + HF_MODEL + ' ......... resolved'],
+    ['warn', 'link :: HF_TOKEN ................ PLACEHOLDER'],
+    ['ok',   'system prompt :: DEFENSIVE_ONLY ..... injected'],
+    ['ok',   'offline core :: knowledge base 9 nodes ... ready'],
+    ['muted','------------------------------------------------'],
+    ['ok',   '0xBASE console :: ONLINE']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) { bootOverlay.parentNode.removeChild(bootOverlay); }
+      }, 500);
+    }
+  }
+  function runBoot() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var i = 0, timer = null;
+    var skip = document.createElement('button');
+    skip.type = 'button'; skip.className = 'boot-skip'; skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* noop */ }
+      bootFinished();
+    }
+    function step() {
+      if (i >= BOOT_LINES.length) { timer = window.setTimeout(finish, reduce ? 0 : 380); return; }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduce ? 0 : (80 + Math.random() * 100));
+    }
+    step();
+  }
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+  if (bootOverlay) { alreadyBooted ? bootFinished() : runBoot(); }
+
+  /* ========================================================================
+     16. ЧАСЫ И ЛИНЕЙКИ
+     ======================================================================== */
+  var clockEl = document.getElementById('clock');
+  function tickClock() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  tickClock();
+  window.setInterval(tickClock, 1000);
+
+  function fitRules() {
+    var rules = $all('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* ========================================================================
+     17. ПРИВЕТСТВИЕ
+     ======================================================================== */
+  function greet() {
+    var info = activeToken();
+    appendMessage('sys', '[BOOT]: 0xBASE console v2.4.1 :: протокол DEFENSIVE_ONLY активен.', stamp());
+    appendMessage('sys', '[CONFIG]: model = ' + HF_MODEL, stamp());
+    appendMessage('sys', '[CONFIG]: endpoint = ' + HF_ENDPOINT, stamp());
+    appendMessage('sys', info.token
+      ? '[CONFIG]: HF_TOKEN обнаружен (' + info.source + ', маска ' + maskToken(info.token) + '). Режим: LIVE.'
+      : '[CONFIG]: HF_TOKEN = заглушка. Режим: OFFLINE-CORE (локальная база знаний).', stamp());
+    appendMessage('ai',
+      '[PROCESS]: ядро 0xBASE на связи. Назначение -> технический разбор по направлениям OSINT, кибербезопасность, социальная инженерия.\n' +
+      '[COMMAND]: введите запрос и нажмите EXEC или Enter.\n' +
+      '[HINT]: наступательные задачи против реальных целей блокируются до обращения к модели — это не ограничение модели, это протокол портала.\n' +
+      '[HINT]: ниже — быстрые запросы; клик подставит вопрос в строку ввода.', stamp());
+  }
+
+  renderTokenState();
+  greet();
+  setState(activeToken().token ? 'idle' : 'offline');
+  if (chatInput) { chatInput.focus(); }
+
+})();
+</script>
+
+</body>
+</html>

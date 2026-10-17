@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="ZeroTrace Academy (0XTRACE) — приватный учебный портал независимых инженеров: OSINT, кибербезопасность, социальная инженерия. Только оборонительные методики.">
+<meta name="theme-color" content="#050505">
+<meta name="robots" content="index, follow">
+<title>[0XTRACE] // REPOSITORY — ГЛАВНЫЙ ТЕРМИНАЛ</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="booting">
+
+<!-- ==========================================================
+     БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ (скрывается автоматически / по SKIP)
+     ========================================================== -->
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация терминала"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> JavaScript отключён. Статический контент доступен, но интерактивные
+    модули (валидация флагов, симулятор SQL-инъекций, ИИ-терминал) работать не будут.
+  </div>
+</noscript>
+
+<!-- ==========================================================
+     ШАПКА
+     ========================================================== -->
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">v2.4.1 &middot; node#EU-07</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> UPLINK STABLE &middot; ENC AES-256-GCM &middot;
+      <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li class="active"><a href="index.html" aria-current="page">[ГЛАВНАЯ]</a></li>
+      <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
+      <li><a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ========================================================
+       ЦЕНТРАЛЬНЫЙ БЛОК: ASCII-ЛОГОТИП
+       ======================================================== -->
+  <section aria-labelledby="welcome-title">
+    <h1 id="welcome-title" class="sr-only">ZeroTrace Academy — главный терминал</h1>
+
+<pre class="ascii-art" aria-label="Логотип 0XTRACE">
+<span class="logo">    ___     \\    \\  ______     _____      ___       _____    ______   
+   / \ \     \\  /\   \____\    |  __ \    / \ \     / ____\  |  ____\  
+  | | | |     \\\\       __     | |\) |   |  _  |   | |       |  |__    
+  | |_| |     \/\\       __     |  _  /   | | | |   | |___    |  ___\   
+    \___/   \\    \\     __     |_| \_\   |_| |_|    \____|   |______\  </span>
+<span class="subline">Z E R O T R A C E   A C A D E M Y   //   O S I N T   .   C Y B E R S E C   .   S O C E N G   //   D E F E N S I V E _ O N L Y</span>
+</pre>
+
+    <div class="panel panel--corners mt2">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>[ СИСТЕМНЫЙ БАННЕР ]</span><span class="rule">---+</span>
+        <span class="path">/home/operator/0xtrace/welcome.msg</span>
+      </div>
+      <p class="lead mb1">
+        &gt; Добро пожаловать в закрытый репозиторий знаний <strong>ZeroTrace Academy</strong>.
+        Здесь нет маркетинга, подписок и «дружелюбных ассистентов».
+        Здесь — инженерные разборы, учебные расследования и оборонительные методики.<span class="cursor" aria-hidden="true"></span>
+      </p>
+      <p class="mb0 dim">
+        Материал предназначен для специалистов по безопасности, журналистов-расследователей,
+        студентов технических направлений и всех, кто хочет понимать, как именно утекают данные —
+        чтобы перестать их терять.
+      </p>
+    </div>
+
+    <div class="row mt2">
+      <div class="kpi"><span class="kpi__n">3</span><span class="kpi__l">направления</span></div>
+      <div class="kpi"><span class="kpi__n">3</span><span class="kpi__l">кейса в архиве</span></div>
+      <div class="kpi"><span class="kpi__n">1</span><span class="kpi__l">живая лаборатория</span></div>
+      <div class="kpi"><span class="kpi__n">0</span><span class="kpi__l">трекеров на сайте</span></div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ========================================================
+       МАНИФЕСТ
+       ======================================================== -->
+  <section class="manifest" aria-labelledby="manifest-title">
+    <h2 id="manifest-title" class="glitch" data-text="[ МАНИФЕСТ ] // ФИЛОСОФИЯ ПРОЕКТА" tabindex="0">[ МАНИФЕСТ ] // ФИЛОСОФИЯ ПРОЕКТА</h2>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>MANIFEST.TXT</span><span class="rule">---+</span>
+        <span class="path">SHA-256 verified &middot; last edit 2026-10-17</span>
+      </div>
+
+      <p>
+        Цифровая эпоха сделала каждого человека наблюдаемым. Камера на углу, метаданные в
+        фотографии, одна и та же фамилия в восьми базах, привычка публиковать билет в соцсети —
+        из этих обрывков за полчаса собирается профиль, о существовании которого человек
+        не подозревает. Мы считаем, что <strong>право на незнание о себе</strong> — базовое,
+        и его невозможно защитить, не понимая механики наблюдения.
+      </p>
+
+      <p>
+        Поэтому <em>этичный хакинг</em> для нас — не профессия-маска и не романтика взлома.
+        Это дисциплина, у которой есть три жёстких ограничения, и они не обсуждаются:
+      </p>
+
+      <ul>
+        <li><strong>Письменное разрешение.</strong> Любая проверка чужой системы без согласия владельца —
+            преступление, а не исследование. На этом портале атакуется только то, что мы
+            развернули сами: локальные симуляторы, учебные дампы, синтетические персонажи.</li>
+        <li><strong>Минимально достаточные данные.</strong> В расследовании собирается ровно столько
+            информации, сколько нужно для вывода. Всё лишнее удаляется. Досье на живого человека —
+            не результат работы, а её провал.</li>
+        <li><strong>Оборонительный результат.</strong> Ценность отчёта измеряется не тем, сколько дыр
+            найдено, а тем, сколько дыр закрыто после его прочтения.</li>
+      </ul>
+
+      <p>
+        Мы публикуем методики атак исключительно в <strong>обезвреженном виде</strong>: как
+        демонстрацию вектора и как пошаговое описание контрмер. На страницах портала нет
+        рабочих эксплойтов, вредоносного кода, боевых payload'ов и инструментов целевой
+        слежки за конкретными людьми. Есть учебные флаги формата <code>FLAG{...}</code>,
+        которые проверяются в вашем же браузере.
+      </p>
+
+      <p>
+        Социальная инженерия изучается здесь как <strong>иммунология</strong>: чтобы выработать
+        устойчивость у сотрудника, бухгалтера, пожилого родственника — нужно точно показать,
+        как звучит и как выглядит атака. Раздел «Фишинг» описывает признаки, а не рецепты.
+      </p>
+
+      <p>
+        И последнее. Анонимность — не про то, чтобы спрятаться. Это про то, чтобы
+        <strong>оставить за собой право на границу</strong>. Мы учим защищать чужую границу
+        так же тщательно, как свою.
+      </p>
+
+      <div class="sig">
+        // Подписано: инженерная группа 0XTRACE. Без имён — намеренно.<br>
+        // Ревизия документа: 0x2F. Распространение: свободное, с сохранением текста.
+      </div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ========================================================
+       НАПРАВЛЕНИЯ (МОДУЛИ)
+       ======================================================== -->
+  <section aria-labelledby="modules-title">
+    <h2 id="modules-title" class="glitch" data-text="[ НАПРАВЛЕНИЯ ] // УЧЕБНЫЕ МОДУЛИ" tabindex="0">[ НАПРАВЛЕНИЯ ] // УЧЕБНЫЕ МОДУЛИ</h2>
+    <p class="dim mb2">Выберите модуль, чтобы развернуть состав дисциплины. Каждый блок ведёт в соответствующий раздел портала.</p>
+
+    <div class="grid-3">
+
+      <!-- МОДУЛЬ 01: OSINT -->
+      <article class="module" id="mod-osint">
+        <div class="module__head">
+          <span class="module__id">MOD::01</span>
+          <span class="badge badge--green">ОСНОВА</span>
+        </div>
+        <div class="module__body">
+          <h3 class="module__title">OSINT</h3>
+          <p class="mb1">Разведка по открытым источникам: сбор, верификация и связывание
+             публичных данных в непротиворечивую картину.</p>
+          <ul class="module__list">
+            <li>Поиск по никнеймам и связывание аккаунтов</li>
+            <li>Метаданные файлов (EXIF / XMP / PDF)</li>
+            <li>GEOINT: геометрия кадра, солнце, тени</li>
+            <li>Поисковые дорки и операторы</li>
+            <li>Верификация изображений и deepfake-маркеры</li>
+          </ul>
+          <details class="tab">
+            <summary>Состав модуля и инструменты</summary>
+            <div class="tab__content">
+              <p class="mb1"><strong>Теория:</strong> пирамида источников, цепочка доверия,
+                 разница между «найденным» и «подтверждённым».</p>
+              <p class="mb1"><strong>Инструменты (легальные, открытые):</strong>
+                 <code>sherlock</code>, <code>maigret</code>, <code>exiftool</code>,
+                 <code>Google Dorks</code>, <code>SunCalc</code>, <code>Wayback Machine</code>,
+                 реверс-поиск изображений.</p>
+              <p class="mb0"><strong>Практика:</strong> кейсы <span class="amber">CASE-001</span>,
+                 <span class="amber">CASE-002</span>, <span class="amber">CASE-003</span> в архиве расследований.</p>
+            </div>
+          </details>
+        </div>
+        <div class="module__foot">
+          <span class="dim">&gt; 12 уроков &middot; 3 кейса</span>
+          <a class="btn btn--sm" href="cases.html">[ ОТКРЫТЬ АРХИВ ]</a>
+        </div>
+      </article>
+
+      <!-- МОДУЛЬ 02: КИБЕРБЕЗОПАСНОСТЬ -->
+      <article class="module" id="mod-cybersec">
+        <div class="module__head">
+          <span class="module__id">MOD::02</span>
+          <span class="badge badge--amber">ПРАКТИКА</span>
+        </div>
+        <div class="module__body">
+          <h3 class="module__title">Кибербезопасность</h3>
+          <p class="mb1">Прикладной анализ защищённости веб-приложений и сетей:
+             от чтения чужого отчёта до собственного аудита по чек-листу.</p>
+          <ul class="module__list">
+            <li>Анализ уязвимостей и модель угроз (STRIDE)</li>
+            <li>OWASP Top 10: разбор и контрмеры</li>
+            <li>Аудит сетей и гигиена конфигураций</li>
+            <li>Инъекции, XSS, broken access control</li>
+            <li>Журналирование и реакция на инцидент</li>
+          </ul>
+          <details class="tab">
+            <summary>Состав модуля и лаборатория</summary>
+            <div class="tab__content">
+              <p class="mb1"><strong>Теория:</strong> как устроен запрос к базе, почему конкатенация
+                 строк — корень половины инцидентов, что такое параметризованный запрос.</p>
+              <p class="mb1"><strong>Лаборатория:</strong> локальный симулятор уязвимой формы входа.
+                 Атакуется <em>только</em> он. Реальных СУБД и чужих сервисов здесь нет.</p>
+              <p class="mb0"><strong>Чек-листы:</strong> OWASP ASVS, CIS Benchmarks,
+                 минимальный набор для малого проекта.</p>
+            </div>
+          </details>
+        </div>
+        <div class="module__foot">
+          <span class="dim">&gt; 10 уроков &middot; 1 стенд</span>
+          <a class="btn btn--sm btn--amber" href="cybersec.html">[ ВОЙТИ В ЛАБОРАТОРИЮ ]</a>
+        </div>
+      </article>
+
+      <!-- МОДУЛЬ 03: СОЦИАЛЬНАЯ ИНЖЕНЕРИЯ -->
+      <article class="module" id="mod-soceng">
+        <div class="module__head">
+          <span class="module__id">MOD::03</span>
+          <span class="badge badge--red">ЧЕЛОВЕЧЕСКИЙ ФАКТОР</span>
+        </div>
+        <div class="module__body">
+          <h3 class="module__title">Социальная инженерия</h3>
+          <p class="mb1">Самый дешёвый и самый результативный вектор атаки.
+             Изучаем его, чтобы строить защиту, а не нападение.</p>
+          <ul class="module__list">
+            <li>Фишинг: анатомия письма и признаки подделки</li>
+            <li>Претекстинг: легенда, роль, давление сроком</li>
+            <li>Вишинг и подмена номера (spoofing)</li>
+            <li>Квирки доверия: авторитет, срочность, любопытство</li>
+            <li>Защита: регламенты, обучение, верификация канала</li>
+          </ul>
+          <details class="tab">
+            <summary>Границы раздела (обязательно к прочтению)</summary>
+            <div class="tab__content">
+              <p class="mb1"><strong>Что здесь есть:</strong> разбор структуры атаки, маркеры
+                 подделки домена и отправителя, сценарии тренировок для сотрудников,
+                 шаблоны служебных инструкций и политика сообщения о подозрительном письме.</p>
+              <p class="mb1"><strong>Чего здесь нет и не будет:</strong> готовых фишинговых страниц,
+                 клонов банковских интерфейсов, списков жертв, инструментов рассылки,
+                 методик воздействия на конкретное лицо.</p>
+              <p class="mb0"><strong>Правило:</strong> любые учения по социальной инженерии
+                 проводятся только по договору с работодателем и только в согласованном окне.
+                 Тренировка на родственниках и коллегах без их ведома — не учебный процесс.</p>
+            </div>
+          </details>
+        </div>
+        <div class="module__foot">
+          <span class="dim">&gt; 8 уроков &middot; DEFENSIVE_ONLY</span>
+          <a class="btn btn--sm" href="assistant.html">[ СПРОСИТЬ 0xBASE ]</a>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ========================================================
+       БЫСТРЫЙ СТАРТ
+       ======================================================== -->
+  <section aria-labelledby="quickstart-title">
+    <h2 id="quickstart-title" class="glitch" data-text="[ БЫСТРЫЙ СТАРТ ]" tabindex="0">[ БЫСТРЫЙ СТАРТ ]</h2>
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>README.md</span><span class="rule">---+</span>
+        <span class="path">порядок прохождения</span>
+      </div>
+<pre class="evidence" aria-label="Порядок прохождения">
+<span class="c"># 0xtrace -- quickstart</span>
+
+<span class="k">01</span>  Прочитать манифест выше. Seriously. Три ограничения — не формальность.
+<span class="k">02</span>  <span class="v">cases.html</span>      -> взять CASE-001, пройти по подсказке, сдать флаг.
+<span class="k">03</span>  <span class="v">cybersec.html</span>   -> повторить инъекцию на локальном симуляторе,
+                        затем прочитать блок «Как это лечится».
+<span class="k">04</span>  <span class="v">assistant.html</span>  -> задать 0xBASE технический вопрос по пройденному.
+
+<span class="c"># Флаги проверяются локально в браузере. На сервер ничего не уходит.</span>
+<span class="c"># Формат флага: FLAG{...} — регистр и пробелы не важны.</span>
+</pre>
+      <div class="row mt1">
+        <a class="btn" href="cases.html">[ КЕЙСЫ ]</a>
+        <a class="btn btn--amber" href="cybersec.html">[ ЛАБОРАТОРИЯ ]</a>
+        <a class="btn btn--ghost" href="assistant.html">[ ИИ_ТЕРМИНАЛ ]</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ==========================================================
+     ПОДВАЛ
+     ========================================================== -->
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // ZeroTrace Academy — независимый учебный проект.
+    Материалы носят исключительно образовательный и оборонительный характер (DEFENSIVE_ONLY).
+    Все персонажи кейсов вымышлены, все стенды локальны. Применение методик против реальных
+    систем и людей без письменного разрешения владельца запрещено и преследуется по закону.
+  </div>
+  <div class="nowrap">
+    build 2026.10.17 &middot; <span class="green">no cookies</span> &middot; <span class="green">no trackers</span> &middot; MIT
+  </div>
+</footer>
+
+<!-- ==========================================================
+     СКРИПТ: БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ + ЧАСЫ + ДЕКОР
+     ========================================================== -->
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     1. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ------------------------------------------------------------------ */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+
+  var BOOT_LINES = [
+    ['ok',    'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain', 'POST ......................... <span class="ok">[ OK ]</span>'],
+    ['plain', 'MEM CHECK 640K ............... <span class="ok">[ OK ]</span>'],
+    ['ok',    'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',    'kernel module :: osint-core ......... loaded'],
+    ['ok',    'kernel module :: vuln-lab ........... loaded'],
+    ['ok',    'kernel module :: 0xbase-console ..... loaded'],
+    ['warn',  'warning :: 3 unresolved cases in archive'],
+    ['ok',    'mount /dev/cases .................... OK'],
+    ['muted', '------------------------------------------------'],
+    ['ok',    'DEFENSIVE_ONLY protocol :: ACTIVE'],
+    ['ok',    'welcome, operator.']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) {
+          bootOverlay.parentNode.removeChild(bootOverlay);
+        }
+      }, 500);
+    }
+  }
+
+  function runBoot() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var i = 0;
+
+    var skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'boot-skip';
+    skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+
+    var timer = null;
+
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* приватный режим */ }
+      bootFinished();
+    }
+
+    function step() {
+      if (i >= BOOT_LINES.length) {
+        timer = window.setTimeout(finish, reduce ? 0 : 420);
+        return;
+      }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduce ? 0 : (85 + Math.random() * 110));
+    }
+
+    if (reduce) { step(); return; }
+    step();
+  }
+
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+
+  if (bootOverlay) {
+    if (alreadyBooted) { bootFinished(); } else { runBoot(); }
+  }
+
+  /* ------------------------------------------------------------------
+     2. ЧАСЫ В ШАПКЕ (UTC)
+     ------------------------------------------------------------------ */
+  var clockEl = document.getElementById('clock');
+  function pad(n) { return n < 10 ? '0' + n : String(n); }
+  function tick() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds());
+  }
+  tick();
+  window.setInterval(tick, 1000);
+
+  /* ------------------------------------------------------------------
+     3. ДЕКОР: ASCII-линейки подгоняем под реальную ширину контейнера
+     ------------------------------------------------------------------ */
+  function fitRules() {
+    var rules = document.querySelectorAll('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* ------------------------------------------------------------------
+     4. Мелкий «шум» в логотипе: случайный символ раз в несколько секунд
+     ------------------------------------------------------------------ */
+  /* Целевой узел — только строки логотипа: подпись .subline остаётся разметкой. */
+  var art = document.querySelector('.ascii-art .logo') || document.querySelector('.ascii-art');
+  if (art) {
+    var original = art.textContent;
+    var glyphs = '#$%&@01?!*+=/\\<>~^';
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) {
+      window.setInterval(function () {
+        var chars = original.split('');
+        var pool = [];
+        for (var k = 0; k < chars.length; k++) {
+          if (chars[k] !== ' ' && chars[k] !== '\n') { pool.push(k); }
+        }
+        if (!pool.length) { return; }
+        var pick = pool[Math.floor(Math.random() * pool.length)];
+        chars[pick] = glyphs[Math.floor(Math.random() * glyphs.length)];
+        art.textContent = chars.join('');
+        window.setTimeout(function () { art.textContent = original; }, 90);
+      }, 2600);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>

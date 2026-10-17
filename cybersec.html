@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Лаборатория уязвимостей ZeroTrace Academy: локальный симулятор SQL-инъекции в форме входа, разбор OWASP Top 10 и контрмеры. Никаких реальных систем.">
+<meta name="theme-color" content="#050505">
+<title>[0XTRACE] // ЛАБОРАТОРИЯ УЯЗВИМОСТЕЙ</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Локальные дополнения страницы лаборатории. */
+  #login-screen.is-breached { display: none; }
+  .lab-note {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    border-left: 2px solid var(--green-dark);
+    padding-left: 10px;
+    margin-top: 10px;
+  }
+  .attempts-panel {
+    border: 1px solid var(--green-dark);
+    background: #030603;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    color: var(--text-dim);
+  }
+  .attempts-panel b { color: var(--amber); }
+  .fix-compare {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    gap: var(--gap);
+  }
+  @media (max-width: 900px) { .fix-compare { grid-template-columns: minmax(0,1fr); } }
+  .fix-bad, .fix-good { border: 1px solid; padding: 10px 12px; background: #030603; }
+  .fix-bad  { border-color: var(--red-dim); }
+  .fix-good { border-color: var(--green-dim); }
+  .fix-bad  h4 { color: var(--red); }
+  .fix-good h4 { color: var(--green); }
+  .fix-bad pre, .fix-good pre {
+    font-size: 12px; line-height: 1.5; color: var(--text);
+    overflow-x: auto; white-space: pre; margin-top: 6px;
+  }
+</style>
+</head>
+<body class="booting">
+
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация лаборатории"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> Лаборатория полностью работает на JavaScript в браузере.
+    Без него симулятор инъекции не реагирует на ввод.
+  </div>
+</noscript>
+
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">lab/vulns</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> SANDBOX ISOLATED &middot; NET: NONE &middot; <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">[ГЛАВНАЯ]</a></li>
+      <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li class="active"><a href="cybersec.html" aria-current="page">[ЛАБОРАТОРИЯ]</a></li>
+      <li><a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <section aria-labelledby="page-title">
+    <h1 id="page-title" class="glitch" data-text="[ ЛАБОРАТОРИЯ ] // ЗОНА ПРАКТИКИ" tabindex="0">[ ЛАБОРАТОРИЯ ] // ЗОНА ПРАКТИКИ</h1>
+
+<pre class="ascii-art" aria-label="Заголовок лаборатории">
+   _          ___      ____     
+  | |        / \ \    |  _ \    
+  | |       |  _  |   | |_) |   
+  | |___    | | | |   |  _ <    
+  |_____|   |_| |_|   |____/    
+</pre>
+
+    <div class="warning-box mt2">
+      <strong>[КАРАНТИН]</strong> Стенд ниже — <strong>чистая клиентская симуляция</strong>.
+      Здесь нет ни сервера, ни базы данных, ни сети: «БД» существует как массив объектов
+      в памяти вашего браузера, а проверка входа выполняется локальным JavaScript.
+      Атаковать разрешено только этот стенд. Перенос тех же приёмов на чужие сервисы —
+      статья уголовного кодекса, а не навык.
+    </div>
+
+    <div class="row">
+      <div class="kpi"><span class="kpi__n" id="kpi-attempts">0</span><span class="kpi__l">попыток входа</span></div>
+      <div class="kpi"><span class="kpi__n" id="kpi-denied">0</span><span class="kpi__l">отказов</span></div>
+      <div class="kpi"><span class="kpi__n" id="kpi-breaches">0</span><span class="kpi__l">успешных инъекций</span></div>
+      <div class="kpi"><span class="kpi__n">A03:2021</span><span class="kpi__l">класс уязвимости</span></div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ==============================================================
+       ЗАДАНИЕ
+       ============================================================== -->
+  <section aria-labelledby="task-title">
+    <h2 id="task-title" class="glitch" data-text="[ ЗАДАНИЕ ] // SQL-ИНЪЕКЦИЯ В ФОРМЕ ВХОДА" tabindex="0">[ ЗАДАНИЕ ] // SQL-ИНЪЕКЦИЯ В ФОРМЕ ВХОДА</h2>
+
+    <div class="lab-grid">
+
+      <!-- ЛЕВАЯ КОЛОНКА: ФОРМА -->
+      <div>
+        <div class="login-box" id="login-screen">
+          <div class="login-box__head">+-- [ ВХОД В ПАНЕЛЬ АДМИНИСТРАТОРА ] ------------------+</div>
+          <div class="login-box__body">
+            <p class="dim mb2" style="font-size:13px">
+              target: <code>https://admin.vuln-lab.local/login</code><br>
+              backend: <code>legacy-app v0.9 (string concat)</code><br>
+              auth: <code>SELECT ... WHERE login AND password</code>
+            </p>
+
+            <form id="admin-login-form" novalidate>
+              <div class="field">
+                <label for="login">ЛОГИН</label>
+                <input type="text" id="login" name="login" autocomplete="off" spellcheck="false"
+                       placeholder="admin" aria-describedby="lab-log">
+              </div>
+              <div class="field">
+                <label for="password">ПАРОЛЬ</label>
+                <input type="password" id="password" name="password" autocomplete="off"
+                       placeholder="********" aria-describedby="lab-log">
+              </div>
+              <div class="row">
+                <button type="submit" class="btn">[ ВЫПОЛНИТЬ ЗАПРОС ]</button>
+                <button type="reset" class="btn btn--ghost btn--sm" id="clear-form">[ ОЧИСТИТЬ ]</button>
+              </div>
+            </form>
+
+            <div class="lab-note">
+              Подсказка: серверная часть стенда склеивает строки без экранирования.
+              Попробуйте подставить в поле логина или пароля классический payload
+              <code>' OR '1'='1</code> — нажмите на любой вариант из списка справа,
+              чтобы вставить его в форму.
+            </div>
+          </div>
+        </div>
+
+        <!-- СКРЫТЫЙ ЭКРАН УСПЕШНОГО ВЗЛОМА -->
+        <div id="breach-screen" aria-live="assertive">
+          <div class="breach">
+<pre class="breach-ascii" aria-hidden="true">
+ ____     _____    ______    ___      _____   _   _  
+|  _ \   |  __ \  |  ____\  / \ \    / ____\ | | | | 
+| |_) |  | |\) |  |  |__   |  _  |  | |      | |_| | 
+|  _ <   |  _  /  |  ___\  | | | |  | |___   |  _  | 
+|____/   |_| \_\  |______\ |_| |_|   \____|  |_| |_| 
+</pre>
+            <h2>БАЗА ДАННЫХ ВЗЛОМАНА. <span class="flag">FLAG{SQL_INJECTION_SUCCESS}</span></h2>
+            <p class="mb1">
+              Аутентификация обойдена: условие <code>WHERE</code> стало тождественно истинным,
+              и запрос вернул первую строку таблицы пользователей — учётную запись с наивысшими правами.
+              Пароль при этом не проверялся вообще.
+            </p>
+
+            <div class="table-scroll mb2">
+              <table class="dump-rows">
+                <caption style="color:var(--text-dim);font-size:11.5px">
+                  // дамп таблицы users (синтетические данные стенда)
+                </caption>
+                <thead>
+                  <tr><th>id</th><th>login</th><th>role</th><th>hash_type</th><th>last_seen</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>1</td><td>root</td><td>ADMIN</td><td class="red">MD5 (broken)</td><td>2026-10-17 09:12 UTC</td></tr>
+                  <tr><td>2</td><td>operator</td><td>STAFF</td><td class="red">MD5 (broken)</td><td>2026-10-16 22:04 UTC</td></tr>
+                  <tr><td>3</td><td>guest</td><td>READ</td><td class="red">plaintext (!)</td><td>2026-10-11 14:38 UTC</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="log log--ok mb2" id="breach-log"></div>
+
+            <div class="row">
+              <button type="button" class="btn btn--ghost" id="restore-form">[ ВОССТАНОВИТЬ ФОРМУ ]</button>
+              <a class="btn btn--amber" href="#fix">[ КАК ЭТО ЛЕЧИТСЯ ]</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="attempts-panel mt2">
+          СЕССИЯ: попыток <b id="p-attempts">0</b> &middot; отказов <b id="p-denied">0</b>
+          &middot; инъекций <b id="p-breaches">0</b> &middot; статус <b id="p-status">ОЖИДАНИЕ</b>
+        </div>
+      </div>
+
+      <!-- ПРАВАЯ КОЛОНКА: ТРАССИРОВКА -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">
+            <span class="rule">+---</span><span>ТРАССИРОВКА ЗАПРОСА</span><span class="rule">---+</span>
+            <span class="path">stdout: legacy-app</span>
+          </div>
+          <div class="query-preview" id="query-preview"><span class="cmt">-- запрос ещё не отправлен.
+-- здесь будет видно, как именно склеивается SQL из ваших полей.</span></div>
+
+          <h3>ГОТОВЫЕ УЧЕБНЫЕ PAYLOAD'Ы (клик — вставить в форму)</h3>
+          <ul class="payload-list">
+            <li>
+              <code data-payload="' OR '1'='1">tautology / классика</code>
+              <span class="dim">обход аутентификации: условие всегда истинно</span>
+            </li>
+            <li>
+              <code data-payload="admin' --">comment / отсечение хвоста</code>
+              <span class="dim">всё после "--" отбрасывается парсером</span>
+            </li>
+            <li>
+              <code data-payload="1' OR '1'='1">numeric-context tautology</code>
+              <span class="dim">вариант для полей без кавычек</span>
+            </li>
+            <li>
+              <code data-payload="' OR 1=1 --">boolean tautology</code>
+              <span class="dim">эквивалентная форма, встречается в логах чаще</span>
+            </li>
+          </ul>
+          <p class="lab-note">
+            Список приведён для распознавания этих строк в журналах и в WAF-правилах.
+            Это сигнатуры защиты, а не инструкция к наступлению.
+          </p>
+        </div>
+
+        <div class="panel mt2">
+          <div class="panel-title">
+            <span class="rule">+---</span><span>ЖУРНАЛ СТЕНДА</span><span class="rule">---+</span>
+            <span class="path">/var/log/vuln-lab.log</span>
+          </div>
+          <div class="log" id="lab-log" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ==============================================================
+       КОНТРМЕРЫ
+       ============================================================== -->
+  <section id="fix" aria-labelledby="fix-title">
+    <h2 id="fix-title" class="glitch" data-text="[ КОНТРМЕРЫ ] // КАК ЭТО ЛЕЧИТСЯ" tabindex="0">[ КОНТРМЕРЫ ] // КАК ЭТО ЛЕЧИТСЯ</h2>
+
+    <div class="fix-compare">
+      <div class="fix-bad">
+        <h4>[X] УЯЗВИМО: конкатенация строк</h4>
+<pre><span style="color:var(--text-dim)">// legacy-app v0.9 — ровно то, что работает на стенде</span>
+var sql = "SELECT * FROM users "
+          + "WHERE login = '" + req.body.login + "' "
+          + "  AND password = '" + req.body.password + "'";
+db.query(sql);
+
+<span style="color:var(--red)">// подстановка "' OR '1'='1" превращает запрос в:
+// WHERE login = '' OR '1'='1' AND password = '' OR '1'='1'
+// -> истина при любых данных -> доступ выдан</span></pre>
+      </div>
+
+      <div class="fix-good">
+        <h4>[V] ЛЕЧЕНИЕ: параметризованный запрос</h4>
+<pre><span style="color:var(--text-dim)">// значение никогда не становится частью кода запроса</span>
+var sql = "SELECT * FROM users "
+          + "WHERE login = ? AND password_hash = ?";
+db.query(sql, [login, hash]);
+
+<span style="color:var(--green)">// Python (sqlite3 / psycopg):
+//   cur.execute("SELECT * FROM users WHERE login=%s AND pw=%s",
+//               (login, pw))
+// PHP (PDO):
+//   $st = $pdo->prepare('SELECT * FROM users WHERE login=:l');
+//   $st->execute([':l' => $login]);</span></pre>
+      </div>
+    </div>
+
+    <div class="panel mt2">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>ЧЕК-ЛИСТ ЗАЩИТЫ (по слоям)</span><span class="rule">---+</span>
+        <span class="path">defense in depth</span>
+      </div>
+      <ol class="mb1">
+        <li><strong>Параметризованные запросы / prepared statements</strong> — единственная настоящая
+            защита от инъекции. Экранирование кавычек её не заменяет: оно зависит от кодировки
+            и контекста и регулярно обходится.</li>
+        <li><strong>ORM с безопасным режимом</strong>. Сырой SQL в ORM (raw queries, <code>extra()</code>,
+            <code>literal()</code>) возвращает вас в уязвимый режим — такие места помечайте в код-ревью.</li>
+        <li><strong>Валидация входа по белому списку</strong>: тип, длина, допустимый набор символов.
+            Не «запретить плохое», а «разрешить только хорошее».</li>
+        <li><strong>Принцип наименьших привилегий для учётки БД</strong>. Приложению не нужны
+            <code>DROP</code>, <code>GRANT</code> и доступ к служебным таблицам.</li>
+        <li><strong>Хранение паролей</strong>: <code>argon2id</code> или <code>bcrypt</code> с солью.
+            MD5 и «plaintext» из дампа выше — отдельный инцидент, а не мелочь.</li>
+        <li><strong>Одинаковый ответ на любую неудачу входа</strong>. Разные сообщения для
+            «нет такого пользователя» и «неверный пароль» — это oracle для перебора.</li>
+        <li><strong>Журналирование и алерты</strong>: фиксировать неудачные входы, серийные попытки,
+            появление SQL-метасимволов в полях форм. Именно так инъекцию видно до ущерба.</li>
+        <li><strong>WAF — последний слой, а не первый</strong>. Правила по сигнатурам из списка выше
+            ловят шум, но не заменяют исправленный запрос.</li>
+      </ol>
+      <p class="lab-note mb0">
+        Проверка результата: после исправления прогоните тот же payload на стенде и убедитесь,
+        что он ушёл в параметры как <em>строковое значение</em>, а не как фрагмент SQL.
+      </p>
+    </div>
+
+    <div class="panel mt2">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>OWASP TOP 10 (2021) — СПРАВОЧНИК РАЗДЕЛА</span><span class="rule">---+</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data">
+          <caption>Идентификатор, название и первичная контрмера</caption>
+          <thead>
+            <tr><th>ID</th><th>Класс риска</th><th>Что ломается</th><th>Первая контрмера</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>A01</td><td>Broken Access Control</td><td>Доступ к чужим объектам и разделам админки</td><td>Проверка прав на каждом запросе, deny by default</td></tr>
+            <tr><td>A02</td><td>Cryptographic Failures</td><td>Слабое шифрование, пароли в открытом виде</td><td>TLS 1.2+, argon2id/bcrypt, отказ от самодельной криптографии</td></tr>
+            <tr><td style="color:var(--amber)">A03</td><td style="color:var(--amber)">Injection</td><td style="color:var(--amber)">SQL/NoSQL/OS/LDAP-инъекции — стенд выше</td><td style="color:var(--amber)">Параметризованные запросы, белый список ввода</td></tr>
+            <tr><td>A04</td><td>Insecure Design</td><td>Ошибки архитектуры и бизнес-логики</td><td>Моделирование угроз на этапе проектирования</td></tr>
+            <tr><td>A05</td><td>Security Misconfiguration</td><td>Открытые порты, дефолтные пароли, debug в проде</td><td>Базовые конфигурации, автопроверки, минимум компонентов</td></tr>
+            <tr><td>A06</td><td>Vulnerable &amp; Outdated Components</td><td>Известные CVE в зависимостях</td><td>SBOM, автоматическое сканирование зависимостей</td></tr>
+            <tr><td>A07</td><td>Identification &amp; Authentication Failures</td><td>Перебор, слабые сессии, утечка токенов</td><td>MFA, rate limit, короткие-lived токены</td></tr>
+            <tr><td>A08</td><td>Software &amp; Data Integrity Failures</td><td>Неподписанные обновления, небезопасный CI/CD</td><td>Подпись артефактов, проверка целостности</td></tr>
+            <tr><td>A09</td><td>Security Logging &amp; Monitoring Failures</td><td>Инцидент не видно неделями</td><td>Единый журнал, алерты, ретенция, план реагирования</td></tr>
+            <tr><td>A10</td><td>Server-Side Request Forgery (SSRF)</td><td>Сервер ходит во внутреннюю сеть по команде атакующего</td><td>Белый список адресов, запрет метаданных 169.254.169.254</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ==============================================================
+       АУДИТ СЕТЕЙ: ЧЕК-ЛИСТ
+       ============================================================== -->
+  <section aria-labelledby="audit-title">
+    <h2 id="audit-title" class="glitch" data-text="[ АУДИТ ] // МИНИМАЛЬНЫЙ СЕТЕВОЙ ЧЕК-ЛИСТ" tabindex="0">[ АУДИТ ] // МИНИМАЛЬНЫЙ СЕТЕВОЙ ЧЕК-ЛИСТ</h2>
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>network-audit.checklist</span><span class="rule">---+</span>
+        <span class="path">только для систем, которыми вы владеете или на которые есть письменное разрешение</span>
+      </div>
+<pre class="evidence"><span class="c">## ПЕРЕД НАЧАЛОМ РАБОТ</span>
+[ ] Есть письменное разрешение владельца (scope, окно, контакты, стоп-слово).
+[ ] Определены границы: какие хосты/подсети в scope, какие — вне.
+[ ] Есть план отката и способ остановить тест за 60 секунд.
+[ ] Согласовано, кому и в каком виде уходит отчёт.
+
+<span class="c">## ИНВЕНТАРИЗАЦИЯ (пассивная, без воздействия)</span>
+[ ] Список публичных сервисов и их версий.
+[ ] Сертификаты: срок, цепочка, совпадение имени, наличие wildcard.
+[ ] Заголовки ответов: HSTS, X-Content-Type-Options, CSP, Referrer-Policy.
+[ ] Открытые порты и соответствия заявленной архитектуре.
+[ ] Утечки в журналах сборки: source maps, .git, .env, backup-файлы.
+
+<span class="c">## КОНФИГУРАЦИЯ</span>
+[ ] Дефолтные учётные данные отсутствуют везде, включая принтеры и камеры.
+[ ] Админ-панели не доступны из публичной сети без VPN/allowlist.
+[ ] Автообновление включено, есть реестр зависимостей (SBOM).
+[ ] Резервные копии существуют, отделены от сети, восстанавливались на практике.
+
+<span class="c">## ЖУРНАЛИРОВАНИЕ</span>
+[ ] Логи не перезаписываются локально, уходят в отдельное хранилище.
+[ ] В логах нет паролей, токенов и полных номеров карт.
+[ ] Настроены алерты: массовые 401/403, новые админы, изменение правил firewall.
+[ ] Время синхронизировано (NTP), часовой пояс единый.
+
+<span class="c">## ПО ИТОГАМ</span>
+[ ] Каждой находке присвоена критичность и владелец.
+[ ] У каждой находки есть воспроизводимый шаг и конкретная контрмера.
+[ ] Назначена дата повторной проверки закрытых пунктов.
+</pre>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // Лаборатория уязвимостей. Стенд работает исключительно
+    в браузере посетителя, сетевые запросы не выполняются, данные синтетические.
+    Материал — DEFENSIVE_ONLY.
+  </div>
+  <div class="nowrap">
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================================================================
+     0. УТИЛИТЫ
+     ================================================================== */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function stamp() {
+    var d = new Date();
+    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  function esc(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  var memoryStore = {};
+  var store = {
+    get: function (k) {
+      try { return window.localStorage.getItem(k); }
+      catch (e) { return Object.prototype.hasOwnProperty.call(memoryStore, k) ? memoryStore[k] : null; }
+    },
+    set: function (k, v) {
+      try { window.localStorage.setItem(k, v); } catch (e) { memoryStore[k] = v; }
+    }
+  };
+
+  /* ==================================================================
+     1. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ================================================================== */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+  var BOOT_LINES = [
+    ['ok',   'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain','POST ......................... <span class="ok">[ OK ]</span>'],
+    ['ok',   'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',   'sandbox :: network namespace ..... ISOLATED'],
+    ['ok',   'target  :: legacy-app v0.9 ......... UP'],
+    ['warn', 'target  :: input sanitization ...... DISABLED (by design)'],
+    ['muted','------------------------------------------------'],
+    ['ok',   'DEFENSIVE_ONLY protocol :: ACTIVE'],
+    ['ok',   'lab ready. attack surface: 1 form.']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) { bootOverlay.parentNode.removeChild(bootOverlay); }
+      }, 500);
+    }
+  }
+  function runBoot() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var i = 0, timer = null;
+    var skip = document.createElement('button');
+    skip.type = 'button'; skip.className = 'boot-skip'; skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* noop */ }
+      bootFinished();
+    }
+    function step() {
+      if (i >= BOOT_LINES.length) { timer = window.setTimeout(finish, reduce ? 0 : 380); return; }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduce ? 0 : (80 + Math.random() * 100));
+    }
+    step();
+  }
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+  if (bootOverlay) { alreadyBooted ? bootFinished() : runBoot(); }
+
+  /* ==================================================================
+     2. ЧАСЫ
+     ================================================================== */
+  var clockEl = document.getElementById('clock');
+  function tickClock() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  tickClock();
+  window.setInterval(tickClock, 1000);
+
+  /* ==================================================================
+     3. ASCII-ЛИНЕЙКИ
+     ================================================================== */
+  function fitRules() {
+    var rules = $all('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* ==================================================================
+     4. СИНТЕТИЧЕСКАЯ «БАЗА ДАННЫХ» СТЕНДА
+     ------------------------------------------------------------------
+     Обычный массив в памяти браузера. Никакого сервера и сети.
+     ================================================================== */
+  var FAKE_DB = {
+    users: [
+      { id: 1, login: 'root',     password: 'Sup3rS3cret!', role: 'ADMIN', hash_type: 'MD5 (broken)',  last_seen: '2026-10-17 09:12 UTC' },
+      { id: 2, login: 'operator', password: 'op2024lab',    role: 'STAFF', hash_type: 'MD5 (broken)',  last_seen: '2026-10-16 22:04 UTC' },
+      { id: 3, login: 'guest',    password: 'guest',        role: 'READ',  hash_type: 'plaintext (!)', last_seen: '2026-10-11 14:38 UTC' }
+    ]
+  };
+
+  /* ==================================================================
+     5. ДЕТЕКТОР УЧЕБНЫХ SQL-ИНЪЕКЦИЙ
+     ------------------------------------------------------------------
+     Распознаёт семейство булевых таутологий (' OR '1'='1 и эквиваленты),
+     отсечение комментария (admin' --) и UNION-выборку.
+     Возвращает { injected, kind, payload } либо { injected:false }.
+     ================================================================== */
+  function detectInjection(rawLogin, rawPassword) {
+    var fields = [
+      { name: 'login',    value: String(rawLogin || '') },
+      { name: 'password', value: String(rawPassword || '') }
+    ];
+
+    /* признаки, которые должны встречаться в поле */
+    var TAUTOLOGY = [
+      /['"`]\s*(or|\|\||and|&&)\s*['"`]?\s*(true|1|'1'|"1"|'a'\s*=\s*'a'|1\s*=\s*1)\s*['"`]?\s*(=|==|is|like)?\s*['"`]?\s*(true|1|'1'|"1")?/i,
+      /\b(or|\|\|)\b\s*\(?\s*['"`]?\w+['"`]?\s*\)?\s*(=|==|<>|!=|like)\s*\(?\s*['"`]?\w+['"`]?\s*\)?/i,
+      /\bor\b\s+(true|1)\b/i
+    ];
+    var COMMENT_CUT = [
+      /['"`]\s*(--|#|\/\*)\s*$/,
+      /['"`]\s*(--|#|\/\*)\s+/,
+      /;\s*(--|#|\/\*)/
+    ];
+    var UNION_SEL = [/\bunion\b[\s\S]{0,40}\bselect\b/i];
+    var STACKED   = [/;\s*(select|insert|update|delete|drop|alter|exec|execute)\b/i];
+
+    function anyMatch(list, str) {
+      for (var i = 0; i < list.length; i++) {
+        var m = str.match(list[i]);
+        if (m) { return m[0]; }
+      }
+      return null;
+    }
+
+    for (var f = 0; f < fields.length; f++) {
+      var value = fields[f].value;
+      var compact = value.replace(/\s+/g, ' ').trim();
+      if (!compact) { continue; }
+
+      var taut  = anyMatch(TAUTOLOGY, compact);
+      var cmt   = anyMatch(COMMENT_CUT, compact);
+      var union = anyMatch(UNION_SEL, compact);
+      var stack = anyMatch(STACKED, compact);
+
+      if (taut || union || stack || (cmt && /['"`]/.test(compact))) {
+        var kind = union ? 'UNION-SELECT' : (stack ? 'STACKED QUERY' : (taut ? 'BOOLEAN TAUTOLOGY' : 'COMMENT TRUNCATION'));
+        return { injected: true, field: fields[f].name, kind: kind, payload: compact, matched: taut || union || stack || cmt };
+      }
+    }
+    return { injected: false };
+  }
+
+  /* ==================================================================
+     6. ЖУРНАЛ СТЕНДА
+     ================================================================== */
+  var labLog = document.getElementById('lab-log');
+  function log(cls, text) {
+    if (!labLog) { return; }
+    var line = document.createElement('span');
+    line.className = 'log__line ' + (cls || '');
+    line.innerHTML = '<span class="log__ts">[' + stamp() + ']</span> ' + text;
+    labLog.appendChild(line);
+    labLog.scrollTop = labLog.scrollHeight;
+    /* не раздуваем журнал */
+    while (labLog.childNodes.length > 120) { labLog.removeChild(labLog.firstChild); }
+  }
+
+  /* ==================================================================
+     7. СЧЁТЧИКИ СЕССИИ
+     ================================================================== */
+  var STATS_KEY = 'zt_lab_stats_v1';
+  var stats = { attempts: 0, denied: 0, breaches: 0 };
+  try {
+    var saved = store.get(STATS_KEY);
+    if (saved) {
+      var parsed = JSON.parse(saved);
+      stats.attempts = parsed.attempts || 0;
+      stats.denied = parsed.denied || 0;
+      stats.breaches = parsed.breaches || 0;
+    }
+  } catch (e) { /* ignore */ }
+
+  function renderStats() {
+    var map = {
+      'kpi-attempts': stats.attempts, 'kpi-denied': stats.denied, 'kpi-breaches': stats.breaches,
+      'p-attempts': stats.attempts, 'p-denied': stats.denied, 'p-breaches': stats.breaches
+    };
+    Object.keys(map).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) { el.textContent = String(map[id]); }
+    });
+    var st = document.getElementById('p-status');
+    if (st) {
+      st.textContent = stats.breaches > 0 ? 'УСПЕШНАЯ ИНЪЕКЦИЯ' : (stats.denied > 0 ? 'ОТКАЗ' : 'ОЖИДАНИЕ');
+      st.style.color = stats.breaches > 0 ? 'var(--red)' : (stats.denied > 0 ? 'var(--amber)' : 'var(--green)');
+    }
+    store.set(STATS_KEY, JSON.stringify(stats));
+  }
+  renderStats();
+
+  /* ==================================================================
+     8. ПРЕДПРОСМОТР СОБРАННОГО SQL
+     ================================================================== */
+  var preview = document.getElementById('query-preview');
+
+  function renderPreview(login, password, verdict) {
+    if (!preview) { return; }
+    var l = esc(login);
+    var p = esc(password);
+
+    /* подсветим найденный payload */
+    if (verdict && verdict.injected) {
+      var inj = '<span class="inj">' + esc(verdict.payload) + '</span>';
+      if (verdict.field === 'login') { l = inj; } else { p = inj; }
+    }
+
+    var html =
+      '<span class="cmt">-- legacy-app v0.9 :: buildQuery()</span>\n' +
+      '<span class="kw">SELECT</span> * <span class="kw">FROM</span> users\n' +
+      '<span class="kw">WHERE</span> login = <span class="str">\'' + l + '\'</span>\n' +
+      '  <span class="kw">AND</span> password = <span class="str">\'' + p + '\'</span>;\n\n';
+
+    if (verdict && verdict.injected) {
+      html +=
+        '<span class="cmt">-- parser: условие WHERE стало тождественно истинным</span>\n' +
+        '<span class="cmt">-- rows returned: ' + FAKE_DB.users.length + ' | auth bypass: </span><span class="inj">TRUE</span>\n' +
+        '<span class="cmt">-- class: A03:2021 Injection :: ' + esc(verdict.kind) + '</span>';
+    } else if (login || password) {
+      html +=
+        '<span class="cmt">-- parser: injection patterns not found</span>\n' +
+        '<span class="cmt">-- rows returned: 0 | auth bypass: FALSE</span>';
+    } else {
+      html += '<span class="cmt">-- ожидание ввода...</span>';
+    }
+    preview.innerHTML = html;
+  }
+
+  /* ==================================================================
+     9. ОБРАБОТЧИК ФОРМЫ
+     ================================================================== */
+  var form = document.getElementById('admin-login-form');
+  var loginScreen = document.getElementById('login-screen');
+  var breachScreen = document.getElementById('breach-screen');
+  var breachLog = document.getElementById('breach-log');
+  var loginInput = document.getElementById('login');
+  var passInput = document.getElementById('password');
+
+  function showBreach(verdict) {
+    if (loginScreen) { loginScreen.classList.add('is-breached'); }
+    if (breachScreen) {
+      breachScreen.classList.add('is-active');
+      breachScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    if (breachLog) {
+      breachLog.innerHTML = '';
+      var lines = [
+        '[PROCESS]: разбор полей формы... поле "' + verdict.field + '" содержит SQL-метасимволы.',
+        '[PROCESS]: buildQuery() выполнил конкатенацию без экранирования.',
+        '[COMMAND]: SELECT * FROM users WHERE login = \'' + verdict.payload + '\' AND password = \'\'',
+        '[PROCESS]: класс паттерна: ' + verdict.kind + '.',
+        '[PROCESS]: пароль не проверялся. Возвращена первая строка таблицы (role=ADMIN).',
+        '[HINT]: БАЗА ДАННЫХ ВЗЛОМАНА. FLAG{SQL_INJECTION_SUCCESS}',
+        '[HINT]: переходите к блоку «КАК ЭТО ЛЕЧИТСЯ» — там параметризованный запрос.'
+      ];
+      lines.forEach(function (t, idx) {
+        var s = document.createElement('span');
+        s.className = 'log__line';
+        s.innerHTML = '<span class="log__ts">[+' + (idx * 120) + 'ms]</span> ' + esc(t);
+        breachLog.appendChild(s);
+      });
+    }
+  }
+
+  function hideBreach() {
+    if (breachScreen) { breachScreen.classList.remove('is-active'); }
+    if (loginScreen) { loginScreen.classList.remove('is-breached'); }
+  }
+
+  if (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+
+      var login = loginInput ? loginInput.value : '';
+      var password = passInput ? passInput.value : '';
+
+      stats.attempts++;
+
+      /* пустая форма */
+      if (!login.trim() && !password.trim()) {
+        stats.denied++;
+        renderStats();
+        renderPreview(login, password, { injected: false });
+        log('log--warn', '[ОШИБКА ВВОДА]: оба поля пусты. Запрос не отправлен.');
+        return;
+      }
+
+      var verdict = detectInjection(login, password);
+      renderPreview(login, password, verdict);
+
+      if (verdict.injected) {
+        /* -------- УСПЕШНАЯ ИНЪЕКЦИЯ -------- */
+        stats.breaches++;
+        renderStats();
+
+        log('log--err', '[ТРЕВОГА]: обнаружена инъекция в поле "' + verdict.field + '" :: ' + verdict.kind);
+        log('log--err', '[PAYLOAD]: ' + esc(verdict.payload));
+        log('log--err', '[РЕЗУЛЬТАТ]: auth bypass = TRUE, rows = ' + FAKE_DB.users.length);
+        log('log--ok',  '[ФЛАГ]: FLAG{SQL_INJECTION_SUCCESS}');
+
+        showBreach(verdict);
+        return;
+      }
+
+      /* -------- ОБЫЧНАЯ ПРОВЕРКА ЛОГИНА/ПАРОЛЯ (без инъекции) -------- */
+      var found = null;
+      for (var i = 0; i < FAKE_DB.users.length; i++) {
+        if (FAKE_DB.users[i].login === login.trim() && FAKE_DB.users[i].password === password) {
+          found = FAKE_DB.users[i];
+          break;
+        }
+      }
+
+      if (found) {
+        log('log--ok', '[ВХОД]: учётные данные совпали (' + found.login + ', role=' + found.role + ').');
+        log('log--warn', '[ЗАМЕЧАНИЕ]: вход по паролю в открытом виде — сам по себе дефект A02.');
+        log('log--warn', '[ЗАДАНИЕ]: стенд считается пройденным только после инъекции. Попробуйте \' OR \'1\'=\'1');
+        renderStats();
+        return;
+      }
+
+      stats.denied++;
+      renderStats();
+      log('log--err', '<strong>Access Denied</strong> :: invalid credentials');
+      log('', '[TRACE]: SELECT * FROM users WHERE login=\'' + esc(login) + '\' AND password=\'' + esc(password) + '\' -> 0 rows');
+      log('log--warn', '[HINT]: приложение склеивает строки. Попробуйте таутологию \' OR \'1\'=\'1 в любом из полей.');
+
+      /* визуальная реакция отказа */
+      if (loginScreen) {
+        loginScreen.animate
+          ? loginScreen.animate(
+              [{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' },
+               { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }],
+              { duration: 180, iterations: 1 })
+          : null;
+      }
+    });
+
+    /* живое обновление трассировки при вводе */
+    [loginInput, passInput].forEach(function (inp) {
+      if (!inp) { return; }
+      inp.addEventListener('input', function () {
+        renderPreview(loginInput.value, passInput.value, detectInjection(loginInput.value, passInput.value));
+      });
+    });
+
+    form.addEventListener('reset', function () {
+      window.setTimeout(function () {
+        renderPreview('', '', { injected: false });
+        log('', '[СИСТЕМА]: поля очищены.');
+      }, 0);
+    });
+  }
+
+  /* ==================================================================
+     10. ВСТАВКА PAYLOAD'ОВ ПО КЛИКУ
+     ================================================================== */
+  $all('[data-payload]').forEach(function (codeEl) {
+    codeEl.setAttribute('tabindex', '0');
+    codeEl.setAttribute('role', 'button');
+    codeEl.title = 'Вставить в поле логина';
+
+    function apply() {
+      var payload = codeEl.getAttribute('data-payload');
+      if (!loginInput) { return; }
+      hideBreach();
+      loginInput.value = payload;
+      if (passInput) { passInput.value = ''; }
+      renderPreview(payload, '', detectInjection(payload, ''));
+      log('log--warn', '[ПОДСТАНОВКА]: payload \'' + esc(payload) + '\' помещён в поле login. Нажмите [ ВЫПОЛНИТЬ ЗАПРОС ].');
+      loginInput.focus();
+    }
+    codeEl.addEventListener('click', apply);
+    codeEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); apply(); }
+    });
+  });
+
+  /* ==================================================================
+     11. ВОССТАНОВЛЕНИЕ ФОРМЫ ПОСЛЕ ВЗЛОМА
+     ================================================================== */
+  var restoreBtn = document.getElementById('restore-form');
+  if (restoreBtn) {
+    restoreBtn.addEventListener('click', function () {
+      hideBreach();
+      if (loginInput) { loginInput.value = ''; }
+      if (passInput) { passInput.value = ''; }
+      renderPreview('', '', { injected: false });
+      log('', '[СИСТЕМА]: стенд перезапущен. Состояние формы сброшено.');
+      if (loginScreen) { loginScreen.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    });
+  }
+
+  var clearBtn = document.getElementById('clear-form');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      window.setTimeout(function () {
+        renderPreview('', '', { injected: false });
+      }, 0);
+    });
+  }
+
+  /* ==================================================================
+     12. СТАРТОВЫЕ СООБЩЕНИЯ
+     ================================================================== */
+  log('', '[СИСТЕМА]: vuln-lab v0.9 инициализирован. Хост: browser (sandbox). Сеть: отключена.');
+  log('', '[СИСТЕМА]: записей в таблице users: ' + FAKE_DB.users.length + ' (синтетические).');
+  log('log--warn', '[ЗАДАНИЕ]: обойти аутентификацию через SQL-инъекцию вида \' OR \'1\'=\'1');
+  log('', '[ОЖИДАНИЕ]: форма входа готова.');
+  renderPreview('', '', { injected: false });
+
+})();
+</script>
+
+</body>
+</html>

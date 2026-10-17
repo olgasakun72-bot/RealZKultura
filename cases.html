@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Архив учебных OSINT-расследований ZeroTrace Academy: три закрытых дела с дампами улик, подсказками и проверкой флагов. Все персонажи вымышлены.">
+<meta name="theme-color" content="#050505">
+<title>[0XTRACE] // АРХИВ OSINT-РАССЛЕДОВАНИЙ</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Локальное дополнение для страницы архива (не вынесено в styles.css,
+     чтобы основной файл оставался общим и чистым). */
+  .case.is-solved .case__no { color: var(--amber); }
+  .case__stamp {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    color: var(--amber);
+    border: 1px solid var(--amber);
+    padding: 1px 7px;
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    background: #120d00;
+    display: none;
+    transform: rotate(-1.5deg);
+  }
+  .case.is-solved .case__stamp { display: inline-block; }
+  .case__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .case[hidden] { display: none; }
+  .archive-stat {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: center;
+    font-size: 13px;
+  }
+  .attempts-note { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+</style>
+</head>
+<body class="booting">
+
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация архива"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> Без JavaScript архив доступен только для чтения: подсказки не раскрываются,
+    флаги не проверяются.
+  </div>
+</noscript>
+
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">archive/cases</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> DB MOUNTED &middot; RO+RW &middot; <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">[ГЛАВНАЯ]</a></li>
+      <li class="active"><a href="cases.html" aria-current="page">[КЕЙСЫ]</a></li>
+      <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
+      <li><a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <section aria-labelledby="page-title">
+    <h1 id="page-title" class="glitch" data-text="[ АРХИВ ] // ЗАКРЫТЫЕ OSINT-РАССЛЕДОВАНИЯ" tabindex="0">[ АРХИВ ] // ЗАКРЫТЫЕ OSINT-РАССЛЕДОВАНИЯ</h1>
+
+<pre class="ascii-art ascii-art--amber" aria-label="Заголовок архива дел">
+    _____     ___       ____     ______     ____    
+   / ____\   / \ \     / ___\   |  ____\   / ___\   
+  | |       |  _  |    \___ \   |  |__     \___ \   
+  | |___    | | | |     ___) |  |  ___\     ___) |  
+   \____|   |_| |_|    |____/   |______\   |____/   
+</pre>
+
+    <div class="warning-box mt2">
+      <strong>[ПРАВОВАЯ РАМКА]</strong> Все дела ниже — <strong>учебные реконструкции</strong>.
+      Имена, компании, адреса кошельков, домены и фотографии вымышлены или синтетически
+      сгенерированы. Совпадения случайны. Флаги проверяются локально в вашем браузере и никуда
+      не отправляются. Методики разрешено применять только к данным, на работу с которыми
+      у вас есть законное основание.
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>СТАТУС АРХИВА</span><span class="rule">---+</span>
+        <span class="path">SELECT * FROM cases WHERE clearance &lt;= 'OPERATOR'</span>
+      </div>
+      <div class="archive-stat mb2">
+        <span>ДЕЛ В АРХИВЕ: <strong class="green">3</strong></span>
+        <span>ЗАКРЫТО ВАМИ: <strong class="amber" id="stat-solved">0</strong></span>
+        <span>ПОДСКАЗОК ИСПОЛЬЗОВАНО: <strong id="stat-hints">0</strong></span>
+        <span>ПОПЫТОК СДАЧИ: <strong id="stat-attempts">0</strong></span>
+      </div>
+      <div class="progress-track progress-track--amber" role="progressbar" aria-label="Прогресс по архиву"
+           aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" id="stat-progress">
+        <i id="stat-progress-bar"></i>
+      </div>
+      <pre class="evidence mt2 mb0" id="stat-ascii" aria-live="polite">[ ] CASE-001  [ ] CASE-002  [ ] CASE-003   &gt;&gt; 00%</pre>
+      <div class="row mt2">
+        <div class="tabbar" role="tablist" aria-label="Фильтр по сложности" style="border-bottom:0;margin-bottom:0">
+          <button type="button" role="tab" class="tab-filter" data-filter="all" aria-selected="true">[ ВСЕ ]</button>
+          <button type="button" role="tab" class="tab-filter" data-filter="СРЕДНИЙ" aria-selected="false">[ СРЕДНИЙ ]</button>
+          <button type="button" role="tab" class="tab-filter" data-filter="ВЫСОКИЙ" aria-selected="false">[ ВЫСОКИЙ ]</button>
+          <button type="button" role="tab" class="tab-filter" data-filter="ЭКСПЕРТНЫЙ" aria-selected="false">[ ЭКСПЕРТНЫЙ ]</button>
+        </div>
+        <button type="button" class="btn btn--sm btn--danger" id="reset-progress">[ СБРОСИТЬ ПРОГРЕСС ]</button>
+      </div>
+    </div>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ==============================================================
+       КЕЙС 1 — ИСЧЕЗНУВШИЙ ЭДВАЙЗЕР
+       ============================================================== -->
+  <section>
+    <article class="case" id="case-001" data-case-id="CASE-001" data-difficulty="СРЕДНИЙ"
+             data-flag="FLAG{ALEX_GATES}" data-raw="ALEX_GATES"
+             data-success="[ДОСТУП РАЗРЕШЕН]: Личность установлена">
+      <div class="case__stamp">ДЕЛО ЗАКРЫТО</div>
+      <div class="case__head">
+        <span class="case__no">CASE-001 // 2024-11-08</span>
+        <h2 class="case__title glitch" data-text="«ИСЧЕЗНУВШИЙ ЭДВАЙЗЕР»" tabindex="0">«ИСЧЕЗНУВШИЙ ЭДВАЙЗЕР»</h2>
+        <span class="badge badge--amber">СЛОЖНОСТЬ: СРЕДНИЙ</span>
+      </div>
+
+      <div class="case__body">
+        <p class="case__legend">
+          <strong>ЛЕГЕНДА.</strong> Стартап <span class="amber">Nordwave Labs</span> привлёк
+          внешнего эдвайзера по токеномике. Он получил аванс <span class="green">42 000 USDT</span>,
+          две недели выдавал «дорожную карту», а затем исчез: удалённые аккаунты, мёртвый номер,
+          пустой профиль. Юристам нужна настоящая личность для досудебной претензии.
+          У операционного директора сохранился единственный устойчивый идентификатор —
+          старый никнейм <code>crypto_wizard99</code>.
+        </p>
+
+        <div class="case__meta">
+          <span class="badge badge--green">КЛАСС: NICKNAME RESOLUTION</span>
+          <span class="badge">ИСТОЧНИКИ: ПУБЛИЧНЫЕ</span>
+          <span class="badge">ВРЕМЯ: ~40 МИН</span>
+          <span class="badge badge--red">ЦЕЛЬ: ИМЯ + ФАМИЛИЯ</span>
+        </div>
+
+        <details class="tab" open>
+          <summary>ДАМП УЛИК (evidence_001.txt)</summary>
+          <div class="tab__content">
+<pre class="evidence"><span class="c">## EXPORT: telegram / channel "nordwave-internal" / 2024-09 .. 2024-11</span>
+<span class="c">## 142 messages, 6 files. Ниже — выжимка, релевантная идентификации.</span>
+
+[<span class="k">MSG 0x11</span>] 2024-09-14 09:02 UTC  from: <span class="v">@crypto_wizard99</span>
+  "Коллеги, скинул в личку структуру вестинга. Не форвардить."
+  <span class="c">--&gt; forward_count: 0 | saved_by: 3 users</span>
+
+[<span class="k">MSG 0x2A</span>] 2024-09-27 18:44 UTC  from: <span class="v">@crypto_wizard99</span>
+  "Завтра не буду до 15:00, у сына тренировка."
+  <span class="c">--&gt; SIDE EFFECT: упоминание семьи. К идентификации отношения не имеет.</span>
+  <span class="c">--&gt; ПРАВИЛО АРХИВА: такие данные в отчёт НЕ включаются.</span>
+
+[<span class="k">FILE 0x07</span>] tokenomics_v3.pdf
+  producer      : <span class="v">LibreOffice 7.6</span>
+  created       : 2024-09-11 21:17:04 <span class="v">+03:00</span>
+  tz_hint       : <span class="v">UTC+3</span>  <span class="c">(MSK / Minsk / Istanbul)</span>
+
+<span class="c">## Пересечение никнейма по открытым площадкам (ручная проверка, 9 из 400+):</span>
+  github.com/<span class="v">crypto_wizard99</span>      <span class="k">200 OK</span>   41 repos, вклад в 2 DeFi-библиотеки
+    <span class="c">commit e91c04f  Author: "A. G." &lt;a.g.xxxxxxxx@gmail.com&gt;  2019-03-02</span>
+    <span class="c">commit 44b1de7  Author: "A. G." &lt;a.g.xxxxxxxx@gmail.com&gt;  2021-07-19</span>
+    <span class="c">2019-2021: почта в коммитах была публичной до включения privacy-режима</span>
+  steamcommunity.com/id/<span class="v">crypto_wizard99</span>  <span class="k">200 OK</span>   profile created 2013
+    <span class="c">avatar hash совпадает с аватаром Telegram за 2022 (perceptual hash, d=3)</span>
+  reddit.com/user/<span class="v">crypto_wizard99</span>        <span class="k">200 OK</span>   karma 1 204
+    <span class="c">единственный содержательный пост: r/personalfinance, 2018, удалён модератором</span>
+    <span class="c">кэш Wayback Machine: web.archive.org/web/2018*/reddit.com/... &lt;-- СНАПШОТ ЕСТЬ</span>
+  linkedin.com/in/<span class="v">crypto-wizard-99</span>       <span class="k">404</span>    <span class="c">профиль удалён 2024-11-02</span>
+  twitter.com/<span class="v">crypto_wizard99</span>            <span class="k">404</span>    <span class="c">аккаунт заблокирован</span>
+
+<span class="c">## Кэш Wayback Machine, снапшот от 2018-06-30 (reddit):</span>
+  "…работаю аналитиком в <span class="v">[redacted]</span>, живу между двумя городами,
+   имя не пишу, но коллеги знают меня как <span class="v">Alex</span>."
+
+<span class="c">## GitHub-архив публичного события 2021 (список участников, PDF, стр. 14):</span>
+  "<span class="v">Alex Gates</span> — независимый аналитик, tokenomics"
+
+<span class="red">## ИТОГОВЫЙ ВОПРОС ДЕЛА:</span>
+   Какое полное имя (ИМЯ_ФАМИЛИЯ) стоит за никнеймом crypto_wizard99?
+   Формат ответа: <span class="v">FLAG{ИМЯ_ФАМИЛИЯ}</span>, разделитель — подчёркивание, верхний регистр.
+</pre>
+          </div>
+        </details>
+
+        <details class="tab">
+          <summary>МЕТОДИКА: как это разбирается по шагам</summary>
+          <div class="tab__content">
+            <ol>
+              <li><strong>Фиксация идентификатора.</strong> Никнейм — слабый, но устойчивый ключ.
+                  Сохраняем его точное написание, регистр и площадку-первоисточник.</li>
+              <li><strong>Автоматический обход площадок.</strong> Проверяем совпадения по сотням
+                  сервисов. Важно: совпадение ника — это <em>гипотеза</em>, а не факт. Ник могли занять.</li>
+              <li><strong>Связывание по вторичным признакам.</strong> Дата регистрации, аватар
+                  (perceptual hash), стиль текста, часовые пояса активности, пересечения подписок.</li>
+              <li><strong>Работа с архивами.</strong> Удалённый профиль не равен исчезнувшему:
+                  снапшоты кэша, Wayback Machine, архивы списков участников конференций.</li>
+              <li><strong>Утечки из истории коммитов.</strong> До 2017-2019 гг. почта в git-коммитах
+                  была публичной по умолчанию. Инициалы в авторе коммита — зацепка, почта — подтверждение.</li>
+              <li><strong>Перекрёстная верификация.</strong> Имя считается установленным, только если
+                  минимум два <em>независимых</em> источника дают одно значение.</li>
+              <li><strong>Санитизация отчёта.</strong> Всё, что не относится к делу (семья, здоровье,
+                  дети), вымарывается. Это не вежливость, это требование регламента.</li>
+            </ol>
+            <p class="mb0 dim"><strong>Контрмеры (как от этого защититься):</strong> раздельные
+              никнеймы для рабочих и личных площадок, включённый privacy-режим почты в git
+              (<code>git config --global user.email "noreply@users.noreply.github.com"</code>),
+              удаление старых профилей, а не только их блокировка, проверка собственного цифрового
+              следа раз в год.</p>
+          </div>
+        </details>
+
+        <div class="hint-box" id="hint-case-001" role="note">
+          <strong>[HINT]:</strong> Используй инструменты <code>Sherlock</code> или <code>Maigret</code>
+          для поиска совпадений никнейма в 400+ соцсетях.
+        </div>
+
+        <div class="case__tools">
+          <button type="button" class="btn btn--amber btn--sm" data-hint-for="case-001">[ ПОДСКАЗКА ]</button>
+          <form class="flag-form" data-case-form="case-001" novalidate>
+            <label for="flag-case-001">СДАЧА ФЛАГА</label>
+            <input type="text" id="flag-case-001" name="flag" autocomplete="off" spellcheck="false"
+                   placeholder="FLAG{...}" aria-describedby="log-case-001">
+            <button type="submit" class="btn">[ ПРОВЕРИТЬ ]</button>
+          </form>
+        </div>
+        <div class="log mt1" id="log-case-001" aria-live="polite"></div>
+        <p class="attempts-note">Попыток: <span data-attempts="case-001">0</span></p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ==============================================================
+       КЕЙС 2 — ИНСАЙДЕРСКИЙ СЛИВ
+       ============================================================== -->
+  <section>
+    <article class="case" id="case-002" data-case-id="CASE-002" data-difficulty="ВЫСОКИЙ"
+             data-flag="FLAG{SKUNK_04}" data-raw="SKUNK_04"
+             data-success="[ДОСТУП РАЗРЕШЕН]: Автор утечки идентифицирован">
+      <div class="case__stamp">ДЕЛО ЗАКРЫТО</div>
+      <div class="case__head">
+        <span class="case__no">CASE-002 // 2025-02-19</span>
+        <h2 class="case__title glitch" data-text="«ИНСАЙДЕРСКИЙ СЛИВ»" tabindex="0">«ИНСАЙДЕРСКИЙ СЛИВ»</h2>
+        <span class="badge badge--red">СЛОЖНОСТЬ: ВЫСОКИЙ</span>
+      </div>
+
+      <div class="case__body">
+        <p class="case__legend">
+          <strong>ЛЕГЕНДА.</strong> Конкурент опубликовал в открытом канале закрытый
+          PDF-чертёж узла <span class="amber">«изделие 7Б»</span> производства
+          <span class="amber">KBP Engineering</span>. Документ не покидал контур компании:
+          доступ был у 11 сотрудников. Утечка подтверждена — нужно вычислить,
+          <strong>чья рабочая станция</strong> сформировала этот файл.
+        </p>
+
+        <div class="case__meta">
+          <span class="badge badge--green">КЛАСС: FILE FORENSICS / METADATA</span>
+          <span class="badge">УЛИКА: document.pdf</span>
+          <span class="badge">ВРЕМЯ: ~25 МИН</span>
+          <span class="badge badge--red">ЦЕЛЬ: ВНУТРЕННИЙ ИДЕНТИФИКАТОР АВТОРА</span>
+        </div>
+
+        <details class="tab" open>
+          <summary>ДАМП УЛИК (evidence_002.txt + вывод exiftool)</summary>
+          <div class="tab__content">
+<pre class="evidence"><span class="c">## Файл получен из публичного поста конкурента 2025-02-19 06:12 UTC.</span>
+<span class="c">## Размер: 4 381 220 bytes. SHA-256: 8f2c…d91a (учебный, синтетический).</span>
+
+<span class="c">$ file document.pdf</span>
+document.pdf: PDF document, version 1.7
+
+<span class="c">$ exiftool -a -u -G1 document.pdf</span>
+[<span class="k">File</span>]        File Name                       : document.pdf
+[<span class="k">File</span>]        File Size                       : 4.4 MB
+[<span class="k">File</span>]        Modify Date                     : <span class="v">2025:02:17 23:41:08+03:00</span>
+[<span class="k">PDF</span>]         PDF Version                     : 1.7
+[<span class="k">PDF</span>]         Producer                        : <span class="v">Adobe Acrobat Pro 2020</span>
+[<span class="k">XMP</span>]         Creator Tool                    : <span class="v">AutoCAD 2022 - Internal Build 24.1</span>
+[<span class="k">XMP</span>]         Create Date                     : <span class="v">2025:02:17 22:03:55+03:00</span>
+[<span class="k">XMP</span>]         Metadata Date                   : <span class="v">2025:02:17 23:41:08+03:00</span>
+[<span class="k">XMP</span>]         <span class="red">Author                          : SKUNK_04</span>
+[<span class="k">XMP</span>]         <span class="red">Last Modified By                : SKUNK_04</span>
+[<span class="k">XMP</span>]         Title                           : 7B — assembly, rev.4 (DRAFT)
+[<span class="k">XMP</span>]         Company                         : <span class="v">KBP Engineering</span>
+[<span class="k">ExifTool</span>]    ExifTool Version Number         : 12.76
+
+<span class="c">## Строки, извлечённые из бинарной части (strings -n 8 document.pdf | grep -iE "user|home"):</span>
+  /Users/<span class="v">skunk04</span>/Documents/KBP/7B/assembly_rev4.dwg
+  C:/Users/<span class="v">s.ivanov</span>/AppData/Local/Temp/AcroDist_9912.tmp
+  &lt;x:xmpmeta xmlns:x="adobe:ns:meta/"&gt; ... &lt;pdf:Author&gt;<span class="v">SKUNK_04</span>&lt;/pdf:Author&gt;
+
+<span class="c">## Журнал DLP-шлюза (выгрузка за 2025-02-17, фрагмент):</span>
+  22:04:11  host=<span class="v">WS-KBP-04</span>  user=<span class="v">SKUNK_04</span>  proc=acad.exe   action=FILE_WRITE  size=4.1MB
+  23:41:20  host=<span class="v">WS-KBP-04</span>  user=<span class="v">SKUNK_04</span>  proc=acrobat.exe action=PDF_EXPORT  <span class="red">policy=IGNORED</span>
+  23:47:02  host=<span class="v">WS-KBP-04</span>  user=<span class="v">SKUNK_04</span>  net=<span class="red">UPLOAD</span>       dst=&lt;личный облачный диск&gt;
+
+<span class="c">## Таблица соответствия внутренних идентификаторов и рабочих станций:</span>
+  SKUNK_01 -&gt; WS-KBP-01    SKUNK_02 -&gt; WS-KBP-02    SKUNK_03 -&gt; WS-KBP-03
+  <span class="v">SKUNK_04 -&gt; WS-KBP-04</span>    SKUNK_05 -&gt; WS-KBP-05    ...  SKUNK_11 -&gt; WS-KBP-11
+
+<span class="red">## ВАЖНО: метаданные — это утверждение файла о себе, а не доказательство.</span>
+   Поле Author подделывается за 10 секунд. Ниже — как проверяли независимость улики.
+
+<span class="c">## Перекрёстная проверка (3 независимых подтверждения):</span>
+  [1] XMP Author == Last Modified By == имя в пути /Users/skunk04/          <span class="k">совпадает</span>
+  [2] DLP-шлюз: PDF_EXPORT и UPLOAD с той же станции в тот же промежуток     <span class="k">совпадает</span>
+  [3] Часовой пояс метаданных (+03:00) == часовой пояс станции WS-KBP-04    <span class="k">совпадает</span>
+
+<span class="red">## ИТОГОВЫЙ ВОПРОС ДЕЛА:</span>
+   Внутренний идентификатор автора документа.
+   Формат ответа: <span class="v">FLAG{ИДЕНТИФИКАТОР}</span>, верхний регистр.
+</pre>
+          </div>
+        </details>
+
+        <details class="tab">
+          <summary>МЕТОДИКА: анализ метаданных и его пределы</summary>
+          <div class="tab__content">
+            <ol>
+              <li><strong>Работаем с копией.</strong> Оригинал улики — только на чтение, хеш фиксируется
+                  до начала анализа. Любой просмотр «в оригинале» меняет дату доступа.</li>
+              <li><strong>Полный дамп.</strong> <code>exiftool -a -u -G1 document.pdf</code>:
+                  <code>-a</code> — все дублирующиеся теги, <code>-u</code> — неизвестные/нестандартные,
+                  <code>-G1</code> — группировка по семейству (File / PDF / XMP / ExifTool).</li>
+              <li><strong>Смотрим не только Author.</strong> Ценнее связка: <em>Creator Tool + Producer +
+                  Create Date + Metadata Date + пути в строках + имя временного каталога</em>.
+                  Пути в <code>strings</code> часто дают логин ОС, который автор не вычищал.</li>
+              <li><strong>Проверяем согласованность времени.</strong> Если Create Date позже Modify Date,
+                  или часовой пояс не совпадает с журналом станции, — метаданные переписаны.</li>
+              <li><strong>Ищем независимое подтверждение.</strong> Журнал DLP/прокси, журнал СУБД,
+                  система контроля версий, билет в трекере. Метаданные без второй ножки — гипотеза.</li>
+              <li><strong>Фиксируем вывод.</strong> В отчёт идёт таблица «утверждение → источник →
+                  независимое подтверждение → вес улики».</li>
+            </ol>
+            <p class="mb0 dim"><strong>Контрмеры:</strong> политика автоочистки метаданных на экспорт
+              (<code>exiftool -all= out.pdf</code> в конвейере публикации), отключение записи логинов
+              в пути документов, DLP с блокировкой (а не с «policy=IGNORED»), водяные знаки и
+              стеганографические метки для каждой копии, обязательный журналируемый контур для
+              документов с грифом.</p>
+          </div>
+        </details>
+
+        <div class="hint-box" id="hint-case-002" role="note">
+          <strong>[HINT]:</strong> Скачай файл и проанализируй его метаданные утилитой
+          <code>exiftool -a -u document.pdf</code>.
+        </div>
+
+        <div class="case__tools">
+          <button type="button" class="btn btn--amber btn--sm" data-hint-for="case-002">[ ПОДСКАЗКА ]</button>
+          <form class="flag-form" data-case-form="case-002" novalidate>
+            <label for="flag-case-002">СДАЧА ФЛАГА</label>
+            <input type="text" id="flag-case-002" name="flag" autocomplete="off" spellcheck="false"
+                   placeholder="FLAG{...}" aria-describedby="log-case-002">
+            <button type="submit" class="btn">[ ПРОВЕРИТЬ ]</button>
+          </form>
+        </div>
+        <div class="log mt1" id="log-case-002" aria-live="polite"></div>
+        <p class="attempts-note">Попыток: <span data-attempts="case-002">0</span></p>
+      </div>
+    </article>
+  </section>
+
+  <!-- ==============================================================
+       КЕЙС 3 — ГЕОЛОКАЦИЯ ПО ОТРАЖЕНИЮ
+       ============================================================== -->
+  <section>
+    <article class="case" id="case-003" data-case-id="CASE-003" data-difficulty="ЭКСПЕРТНЫЙ"
+             data-flag="FLAG{55.7558_37.6173}" data-raw="55.7558_37.6173"
+             data-success="[ДОСТУП РАЗРЕШЕН]: Точка съёмки локализована">
+      <div class="case__stamp">ДЕЛО ЗАКРЫТО</div>
+      <div class="case__head">
+        <span class="case__no">CASE-003 // 2025-06-03</span>
+        <h2 class="case__title glitch" data-text="«ГЕОЛОКАЦИЯ ПО ОТРАЖЕНИЮ»" tabindex="0">«ГЕОЛОКАЦИЯ ПО ОТРАЖЕНИЮ»</h2>
+        <span class="badge badge--red">СЛОЖНОСТЬ: ЭКСПЕРТНЫЙ</span>
+      </div>
+
+      <div class="case__body">
+        <p class="case__legend">
+          <strong>ЛЕГЕНДА.</strong> Фигурант, скрывающийся от обязательств по контракту,
+          прислал «доказательство, что он в другом городе»: фотографию чашки кофе на столе.
+          В глянцевой поверхности чашки читается <span class="amber">отражение фасада здания</span>
+          и <span class="amber">фрагмент моста</span>. EXIF вычищен полностью.
+          Задача — восстановить точку съёмки по геометрии кадра и свету.
+        </p>
+
+        <div class="case__meta">
+          <span class="badge badge--green">КЛАСС: GEOINT / CHRONOLOCATION</span>
+          <span class="badge">УЛИКА: coffee_table.jpg</span>
+          <span class="badge">ВРЕМЯ: ~90 МИН</span>
+          <span class="badge badge--red">ЦЕЛЬ: КООРДИНАТЫ ШИРОТА_ДОЛГОТА</span>
+        </div>
+
+        <details class="tab" open>
+          <summary>ДАМП УЛИК (evidence_003.txt + описание кадра)</summary>
+          <div class="tab__content">
+<pre class="evidence"><span class="c">## coffee_table.jpg — 3024x4032, HEIC->JPEG конвертация.</span>
+
+<span class="c">$ exiftool coffee_table.jpg</span>
+ExifTool Version Number         : 12.76
+File Name                       : coffee_table.jpg
+File Size                       : 3.1 MB
+Image Size                      : 3024x4032
+<span class="red">GPS Latitude                    : (нет)</span>
+<span class="red">GPS Longitude                   : (нет)</span>
+<span class="red">Date/Time Original              : (нет)</span>
+Make / Model                    : (нет)
+Comment                         : <span class="v">Processed by "MetaCleaner Pro" — all tags removed</span>
+<span class="c">## Вывод: метаданные уничтожены намеренно. Остаётся только пиксельная геометрия.</span>
+
+<span class="c">## ВИЗУАЛЬНЫЙ РАЗБОР КАДРА (аналитическая записка, 9 наблюдений):</span>
+[<span class="k">OBS-01</span>] Чашка: белая керамика, глянцевая глазурь, диаметр ~85 мм.
+         Отражение читается в нижней трети внешней стенки — как в выпуклом зеркале.
+[<span class="k">OBS-02</span>] В отражении — фасад в <span class="v">5 этажей</span>, рустовка первого яруса,
+         оконные проёмы с <span class="v">лучковой перемычкой</span>, лепной карниз с сухариками.
+[<span class="k">OBS-03</span>] Стиль фасада: <span class="v">эклектика конца XIX века</span>, «кирпичный стиль»
+         с белокаменными вставками. Характерен для доходных домов 1880-1900-х.
+[<span class="k">OBS-04</span>] Правее фасада, выше линии крыши — <span class="v">фрагмент моста</span>:
+         стальная <span class="v">ферменная конструкция с раскосами</span>, клёпаный пояс,
+         окраска тёмная, следы коррозии по нижнему поясу.
+[<span class="k">OBS-05</span>] Мост расположен <span class="v">выше</span> уровня наблюдателя на ~6-8 м
+         (в отражении виден снизу-сбоку) -&gt; съёмка с набережной, ниже полотна.
+[<span class="k">OBS-06</span>] В кадре: стол из тёмного дерева, край газеты (текст неразборчив,
+         кириллица, шрифт с засечками), стакан воды, тень от чашки.
+[<span class="k">OBS-07</span>] <span class="v">Тень</span>: резкая, короткая, направлена <span class="v">вверх-влево</span> от кадра,
+         длина тени чашки ~0.55 её высоты -&gt; солнце высоко, близко к полудню.
+[<span class="k">OBS-08</span>] Угол возвышения солнца по длине тени:
+         <span class="v">h = atan(1 / 0.55) ≈ 61.2°</span>
+[<span class="k">OBS-09</span>] Азимут тени (по ориентации стола и направлению на фасад):
+         тень уходит на <span class="v">WNW</span> -&gt; солнце в секторе <span class="v">ESE-SSE</span>, азимут ≈ <span class="v">147°</span>.
+
+<span class="c">## АСТРОНОМИЧЕСКАЯ ПРИВЯЗКА (SunCalc, обратная задача):</span>
+   Высота солнца 61.2° в середине дня -&gt; широта, где солнце поднимается так высоко
+   в <span class="v">конце мая / начале июня</span>. Для широты <span class="v">55.75° N</span> на 3 июня
+   максимальная высота солнца = 90 - 55.75 + 22.1 = <span class="v">56.4°</span>… не сходится.
+   Уточнение: OBS-08 даёт 61.2° при наклоне поверхности стола ~5° к камере
+   (стол завален, поправка на перспективу +4.8°) -&gt; истинная высота ≈ <span class="v">56.4°</span>.
+   <span class="k">Сходится с широтой 55.75° N на дату 2025-06-03.</span>
+
+<span class="c">## ГИПОТЕЗА ЛОКАЦИИ:</span>
+   Крупная река + ферменный клёпаный мост + доходные дома эклектики в 5 этажей
+   + набережная ниже уровня полотна -&gt; исторический центр города на широте 55.75° N.
+   Кандидат единственный: <span class="v">набережная в центре Москвы</span>, участок между
+   пешеходным мостом и зданием с рустовкой.
+
+<span class="c">## КОНТРОЛЬНЫЕ ТОЧКИ (реверс-поиск по фрагменту моста дал совпадения):</span>
+   [1] Архитектура фермы: совпадение 0.91 с фотографиями pedestrian bridge, центр города
+   [2] Ракурс «с набережной снизу»: совпадение 0.87
+   [3] Ориентация фасада относительно моста: совпадение 0.94
+
+<span class="red">## ИТОГОВЫЙ ВОПРОС ДЕЛА:</span>
+   Координаты точки съёмки с точностью до 4 знаков после запятой.
+   Формат ответа: <span class="v">FLAG{ШИРОТА_ДОЛГОТА}</span>, разделитель — подчёркивание.
+   Пример формата: FLAG{00.0000_00.0000}
+</pre>
+          </div>
+        </details>
+
+        <details class="tab">
+          <summary>МЕТОДИКА: хронолокация и геометрия отражений</summary>
+          <div class="tab__content">
+            <ol>
+              <li><strong>Сначала — тень, потом — карта.</strong> Длина и направление тени дают
+                  высоту и азимут солнца. Это два уравнения, которые резко сужают множество
+                  возможных точек и дат.</li>
+              <li><strong>Высота солнца:</strong> <code>h = atan(высота_объекта / длина_тени)</code>.
+                  Поправка обязательна, если поверхность не горизонтальна (заваленный стол, наклон).</li>
+              <li><strong>SunCalc как обратная задача.</strong> Задаём дату и подбираем широту, при
+                  которой высота солнца в расчётный момент совпадает с измеренной.
+                  Широта определяется однозначно; долгота — через время (часовой пояс + смещение полудня).</li>
+              <li><strong>Отражения — это второй объектив.</strong> Глянец керамики работает как
+                  выпуклое зеркало: изображение сжато и искажено, но <em>узнаваемость объектов</em>
+                  сохраняется. Ищем не детали, а силуэты и относительное положение.</li>
+              <li><strong>Архитектурная атрибуция.</strong> Этажность, тип перемычек, рустовка, карниз,
+                  стиль — датировка постройки с точностью до десятилетия, а значит и круг городов.</li>
+              <li><strong>Реверс-поиск по фрагменту.</strong> Обрезается <em>часть</em> кадра
+                  (ферма моста), а не весь снимок: поисковики лучше матчат уникальные конструкции.</li>
+              <li><strong>Проверка на местности без выезда.</strong> Панорамы улиц, спутниковые снимки,
+                  сопоставление углов: «стоя в этой точке, вижу ли я одновременно фасад и мост
+                  под таким углом?»</li>
+            </ol>
+            <p class="mb0 dim"><strong>Контрмеры:</strong> вычищать метаданные — недостаточно.
+              Остаётся пиксельная геометрия. Для публичных публикаций: не снимать на фоне
+              узнаваемых конструкций, не оставлять в кадре тени с читаемым направлением,
+              проверять глянцевые поверхности (стекло, керамика, экраны, солнечные очки, ложки),
+              отключать привязку снимков к месту на устройстве, не публиковать оригиналы —
+              пережатие уничтожает часть сигналов, но не геометрию.</p>
+          </div>
+        </details>
+
+        <div class="hint-box" id="hint-case-003" role="note">
+          <strong>[HINT]:</strong> Используй реверсивный поиск по картинкам, определи архитектурный
+          стиль моста и высчитай угол солнца через <code>SunCalc</code>.
+        </div>
+
+        <div class="case__tools">
+          <button type="button" class="btn btn--amber btn--sm" data-hint-for="case-003">[ ПОДСКАЗКА ]</button>
+          <form class="flag-form" data-case-form="case-003" novalidate>
+            <label for="flag-case-003">СДАЧА ФЛАГА</label>
+            <input type="text" id="flag-case-003" name="flag" autocomplete="off" spellcheck="false"
+                   placeholder="FLAG{55.7558_37.6173}" aria-describedby="log-case-003">
+            <button type="submit" class="btn">[ ПРОВЕРИТЬ ]</button>
+          </form>
+        </div>
+        <div class="log mt1" id="log-case-003" aria-live="polite"></div>
+        <p class="attempts-note">Попыток: <span data-attempts="case-003">0</span></p>
+      </div>
+    </article>
+  </section>
+
+  <pre class="ascii-rule" aria-hidden="true">+----------------------------------------------------------------------------------------------+</pre>
+
+  <!-- ==============================================================
+       РЕГЛАМЕНТ РАБОТЫ С АРХИВОМ
+       ============================================================== -->
+  <section aria-labelledby="protocol-title">
+    <h2 id="protocol-title" class="glitch" data-text="[ РЕГЛАМЕНТ ] // КАК ВЕДЁТСЯ РАССЛЕДОВАНИЕ" tabindex="0">[ РЕГЛАМЕНТ ] // КАК ВЕДЁТСЯ РАССЛЕДОВАНИЕ</h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title"><span class="rule">+---</span><span>ДОПУСТИМО</span><span class="rule">---+</span></div>
+        <ul class="mb0">
+          <li>Работа с публичными источниками и собственными данными.</li>
+          <li>Анализ файлов, которые вам передали законно.</li>
+          <li>Расследование с письменного согласия владельца актива.</li>
+          <li>Учебные стенды, CTF, собственные домены и аккаунты.</li>
+          <li>Публикация методик защиты и чек-листов.</li>
+        </ul>
+      </div>
+      <div class="panel" style="border-color:var(--red-dim)">
+        <div class="panel-title" style="color:var(--red);border-bottom-color:var(--red-dim)">
+          <span class="rule" style="color:var(--red-dim)">+---</span><span>ЗАПРЕЩЕНО</span><span class="rule" style="color:var(--red-dim)">---+</span>
+        </div>
+        <ul class="mb0">
+          <li>Сбор досье на человека без его ведома и без законного основания.</li>
+          <li>Доксинг: публикация адреса, телефона, данных родственников.</li>
+          <li>Доступ к чужим аккаунтам, переписке, облакам — в любой форме.</li>
+          <li>Использование утечек баз персональных данных.</li>
+          <li>Слежка, установка трекеров, воздействие на конкретных лиц.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel mt2">
+      <div class="panel-title"><span class="rule">+---</span><span>ФОРМУЛА ОТЧЁТА</span><span class="rule">---+</span></div>
+      <table class="data">
+        <caption>Минимальная структура отчёта по расследованию</caption>
+        <thead>
+          <tr><th>Раздел</th><th>Что внутри</th><th>Проверка</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Постановка</td><td>Вопрос, на который отвечаем. Формулировка в одну строку.</td><td>Вопрос измерим?</td></tr>
+          <tr><td>Улики</td><td>Хеши, даты получения, способ получения каждого артефакта.</td><td>Цепочка custody</td></tr>
+          <tr><td>Наблюдения</td><td>Что видно в улике. Без интерпретаций.</td><td>Воспроизводимо другим?</td></tr>
+          <tr><td>Гипотезы</td><td>Версии и их вес. Обязательно — опровергнутые версии.</td><td>Есть ли контр-гипотеза?</td></tr>
+          <tr><td>Вывод</td><td>Ответ с уровнем уверенности (подтверждено / вероятно / не установлено).</td><td>≥2 независимых источника</td></tr>
+          <tr><td>Контрмеры</td><td>Что закрыть, чтобы это не повторилось.</td><td>Есть владелец и срок?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // Архив учебных расследований. Персонажи и организации
+    вымышлены. Флаги валидируются локально в браузере. Материалы — DEFENSIVE_ONLY.
+  </div>
+  <div class="nowrap">
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a> &middot; <a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================================================================
+     0. ОБЩИЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+     ================================================================== */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) {
+    var list = (root || document).querySelectorAll(sel);
+    return Array.prototype.slice.call(list);
+  }
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function stamp() {
+    var d = new Date();
+    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+
+  /* Безопасное хранилище: в приватном режиме или при запрете storage
+     работаем с объектом в памяти, чтобы страница не падала. */
+  var memoryStore = {};
+  var store = {
+    get: function (key) {
+      try { return window.localStorage.getItem(key); }
+      catch (e) { return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null; }
+    },
+    set: function (key, value) {
+      try { window.localStorage.setItem(key, value); }
+      catch (e) { memoryStore[key] = value; }
+    },
+    remove: function (key) {
+      try { window.localStorage.removeItem(key); }
+      catch (e) { delete memoryStore[key]; }
+    }
+  };
+
+  /* ==================================================================
+     1. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ================================================================== */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+
+  var BOOT_LINES = [
+    ['ok',    'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain', 'POST ......................... <span class="ok">[ OK ]</span>'],
+    ['ok',    'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',    'mount /dev/cases ............ OK'],
+    ['warn',  'index rebuild :: 3 records, 0 corrupted'],
+    ['muted', '------------------------------------------------'],
+    ['ok',    'DEFENSIVE_ONLY protocol :: ACTIVE'],
+    ['ok',    'archive ready.']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) { bootOverlay.parentNode.removeChild(bootOverlay); }
+      }, 500);
+    }
+  }
+
+  function runBoot() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var i = 0, timer = null;
+
+    var skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'boot-skip';
+    skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* noop */ }
+      bootFinished();
+    }
+    function step() {
+      if (i >= BOOT_LINES.length) { timer = window.setTimeout(finish, reduce ? 0 : 380); return; }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduce ? 0 : (80 + Math.random() * 100));
+    }
+    step();
+  }
+
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+  if (bootOverlay) { alreadyBooted ? bootFinished() : runBoot(); }
+
+  /* ==================================================================
+     2. ЧАСЫ
+     ================================================================== */
+  var clockEl = document.getElementById('clock');
+  function tickClock() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  tickClock();
+  window.setInterval(tickClock, 1000);
+
+  /* ==================================================================
+     3. ASCII-ЛИНЕЙКИ ПОД ШИРИНУ
+     ================================================================== */
+  function fitRules() {
+    var rules = $all('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* ==================================================================
+     4. ЖУРНАЛ КЕЙСА
+     ================================================================== */
+  function writeLog(caseEl, cls, text) {
+    var logId = 'log-' + caseEl.id;
+    var log = document.getElementById(logId);
+    if (!log) { return; }
+    var line = document.createElement('span');
+    line.className = 'log__line ' + (cls || '');
+    line.innerHTML = '<span class="log__ts">[' + stamp() + ']</span> ' + text;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  /* ==================================================================
+     5. НОРМАЛИЗАЦИЯ И ВАЛИДАЦИЯ ФЛАГОВ
+     ------------------------------------------------------------------
+     Принимаем:  FLAG{ALEX_GATES} | flag{alex_gates} | ALEX_GATES
+                 FLAG[ ALEX_GATES ] | "flag{alex gates}"
+     Не принимаем: всё остальное.
+     ================================================================== */
+  function normalizeFlag(input) {
+    var s = String(input || '').trim();
+    if (!s) { return ''; }
+    s = s.replace(/\s+/g, ' ');
+    /* вытаскиваем содержимое скобок, если формат полный */
+    var m = s.match(/FLAG\s*[\{\[\(]\s*([\s\S]*?)\s*[\}\]\)]/i);
+    if (m) { s = m[1]; }
+    else {
+      /* возможно, пользователь написал только "FLAG ALEX_GATES" */
+      s = s.replace(/^FLAG\s*[:\-]?\s*/i, '');
+    }
+    s = s.replace(/[\s\-]+/g, '_');   /* пробелы и дефисы -> подчёркивание */
+    s = s.replace(/[.]+/g, '.');      /* точки в координатах сохраняем */
+    return s.toUpperCase();
+  }
+
+  /* ==================================================================
+     6. СОСТОЯНИЕ АРХИВА
+     ================================================================== */
+  var STATE_KEY = 'zt_cases_state_v1';
+
+  function loadState() {
+    var raw = store.get(STATE_KEY);
+    if (!raw) { return { solved: {}, hints: {}, attempts: {} }; }
+    try {
+      var parsed = JSON.parse(raw);
+      return {
+        solved:   parsed.solved   || {},
+        hints:    parsed.hints    || {},
+        attempts: parsed.attempts || {}
+      };
+    } catch (e) {
+      return { solved: {}, hints: {}, attempts: {} };
+    }
+  }
+  function saveState(state) { store.set(STATE_KEY, JSON.stringify(state)); }
+
+  var state = loadState();
+  var cases = $all('.case[data-case-id]');
+
+  function caseIdOf(el) { return el.getAttribute('data-case-id'); }
+
+  function solvedCount() {
+    var n = 0;
+    for (var i = 0; i < cases.length; i++) {
+      if (state.solved[caseIdOf(cases[i])]) { n++; }
+    }
+    return n;
+  }
+  function hintsCount() {
+    var n = 0;
+    for (var k in state.hints) { if (Object.prototype.hasOwnProperty.call(state.hints, k) && state.hints[k]) { n++; } }
+    return n;
+  }
+  function attemptsTotal() {
+    var n = 0;
+    for (var k in state.attempts) {
+      if (Object.prototype.hasOwnProperty.call(state.attempts, k)) { n += state.attempts[k]; }
+    }
+    return n;
+  }
+
+  function renderStats() {
+    var solved = solvedCount();
+    var total = cases.length;
+    var elSolved = document.getElementById('stat-solved');
+    var elHints = document.getElementById('stat-hints');
+    var elAttempts = document.getElementById('stat-attempts');
+    var elBar = document.getElementById('stat-progress-bar');
+    var elTrack = document.getElementById('stat-progress');
+    var elAscii = document.getElementById('stat-ascii');
+
+    if (elSolved) { elSolved.textContent = String(solved); }
+    if (elHints) { elHints.textContent = String(hintsCount()); }
+    if (elAttempts) { elAttempts.textContent = String(attemptsTotal()); }
+
+    var pct = total ? Math.round((solved / total) * 100) : 0;
+    if (elBar) { elBar.style.width = pct + '%'; }
+    if (elTrack) {
+      elTrack.setAttribute('aria-valuenow', String(solved));
+      elTrack.setAttribute('aria-valuetext', solved + ' из ' + total + ' дел закрыто');
+    }
+    if (elAscii) {
+      var marks = [];
+      for (var i = 0; i < cases.length; i++) {
+        var id = caseIdOf(cases[i]);
+        marks.push((state.solved[id] ? '[X] ' : '[ ] ') + id);
+      }
+      elAscii.textContent = marks.join('  ') + '   >> ' + (pct < 10 ? '0' : '') + pct + '%';
+    }
+
+    /* счётчики попыток у каждого кейса */
+    for (var j = 0; j < cases.length; j++) {
+      var cid = caseIdOf(cases[j]);
+      var counter = document.querySelector('[data-attempts="' + cases[j].id + '"]');
+      if (counter) { counter.textContent = String(state.attempts[cid] || 0); }
+    }
+  }
+
+  function renderCaseVisual(el) {
+    var cid = caseIdOf(el);
+    if (state.solved[cid]) {
+      el.classList.add('is-solved');
+      var input = el.querySelector('input[name="flag"]');
+      var submit = el.querySelector('button[type="submit"]');
+      if (input) { input.value = el.getAttribute('data-flag'); input.readOnly = true; }
+      if (submit) { submit.disabled = true; submit.textContent = '[ ЗАКРЫТО ]'; }
+      var hintBtn = el.querySelector('[data-hint-for]');
+      if (hintBtn) { hintBtn.disabled = true; }
+    } else {
+      el.classList.remove('is-solved');
+    }
+    /* подсказка остаётся раскрытой, если её уже открывали */
+    var hintBox = document.getElementById('hint-' + el.id);
+    if (hintBox && state.hints[cid]) { hintBox.classList.add('is-open'); }
+  }
+
+  /* ==================================================================
+     7. ПОДСКАЗКИ
+     ================================================================== */
+  $all('[data-hint-for]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var targetId = btn.getAttribute('data-hint-for');
+      var box = document.getElementById('hint-' + targetId);
+      var caseEl = document.getElementById(targetId);
+      if (!box || !caseEl) { return; }
+
+      var cid = caseIdOf(caseEl);
+      var open = box.classList.toggle('is-open');
+
+      if (open && !state.hints[cid]) {
+        state.hints[cid] = 1;
+        saveState(state);
+        writeLog(caseEl, 'log--warn', '[HINT]: подсказка запрошена. Штрафа нет, но и славы тоже.');
+        renderStats();
+      }
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', 'hint-' + btn.getAttribute('data-hint-for'));
+  });
+
+  /* ==================================================================
+     8. СДАЧА ФЛАГОВ
+     ================================================================== */
+  var WRONG_HINTS = [
+    '[ОТКАЗАНО В ДОСТУПЕ]: значение не совпадает с эталоном дела.',
+    '[ОТКАЗАНО В ДОСТУПЕ]: проверьте регистр, разделитель и формат FLAG{...}.',
+    '[ОТКАЗАНО В ДОСТУПЕ]: источник не подтверждён. Вернитесь к дампу улик.',
+    '[ОТКАЗАНО В ДОСТУПЕ]: гипотеза не прошла перекрёстную проверку.'
+  ];
+
+  $all('form[data-case-form]').forEach(function (form) {
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+
+      var caseEl = document.getElementById(form.getAttribute('data-case-form'));
+      if (!caseEl) { return; }
+      var cid = caseIdOf(caseEl);
+
+      if (state.solved[cid]) {
+        writeLog(caseEl, 'log--ok', '[ПОВТОР]: дело уже закрыто. Флаг принят ранее.');
+        return;
+      }
+
+      var input = form.querySelector('input[name="flag"]');
+      var raw = input ? input.value : '';
+      var value = normalizeFlag(raw);
+
+      state.attempts[cid] = (state.attempts[cid] || 0) + 1;
+      saveState(state);
+      renderStats();
+
+      if (!value) {
+        writeLog(caseEl, 'log--err', '[ОШИБКА ВВОДА]: пустое значение. Ожидается формат FLAG{...}.');
+        if (input) { input.focus(); }
+        return;
+      }
+
+      var expected = normalizeFlag(caseEl.getAttribute('data-flag'));
+      var expectedRaw = normalizeFlag(caseEl.getAttribute('data-raw'));
+
+      if (value === expected || value === expectedRaw) {
+        state.solved[cid] = stamp();
+        saveState(state);
+
+        var successText = caseEl.getAttribute('data-success') || '[ДОСТУП РАЗРЕШЕН]: флаг принят';
+        writeLog(caseEl, 'log--ok', successText + ' &lt;&lt; ' + caseEl.getAttribute('data-flag'));
+        writeLog(caseEl, 'log--ok', '[ЗАПИСЬ]: ' + cid + ' помечено как закрытое. Прогресс сохранён локально.');
+
+        renderCaseVisual(caseEl);
+        renderStats();
+
+        /* мигающая подсветка карточки */
+        caseEl.animate
+          ? caseEl.animate(
+              [{ boxShadow: '0 0 0 rgba(51,255,51,0)' },
+               { boxShadow: '0 0 26px rgba(51,255,51,.55)' },
+               { boxShadow: '0 0 0 rgba(51,255,51,0)' }],
+              { duration: 900, iterations: 2 })
+          : null;
+
+        if (solvedCount() === cases.length) {
+          writeLog(caseEl, 'log--ok', '[АРХИВ]: все 3 дела закрыты. Допуск повышен до ANALYST-2.');
+        }
+        return;
+      }
+
+      var hint = WRONG_HINTS[Math.min(state.attempts[cid] - 1, WRONG_HINTS.length - 1)];
+      writeLog(caseEl, 'log--err', hint + ' Получено: <span class="amber">' +
+        String(raw).replace(/[<>&]/g, '') + '</span>');
+
+      if (state.attempts[cid] >= 3) {
+        writeLog(caseEl, 'log--warn', '[РЕКОМЕНДАЦИЯ]: откройте блок «МЕТОДИКА» — там порядок действий.');
+      }
+      if (input) { input.select(); input.focus(); }
+    });
+  });
+
+  /* ==================================================================
+     9. ФИЛЬТР ПО СЛОЖНОСТИ (переключение вкладок архива)
+     ================================================================== */
+  var filterButtons = $all('.tab-filter');
+  filterButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var filter = btn.getAttribute('data-filter');
+      filterButtons.forEach(function (b) {
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      var visible = 0;
+      cases.forEach(function (el) {
+        var show = (filter === 'all') || (el.getAttribute('data-difficulty') === filter);
+        el.hidden = !show;
+        var wrapper = el.parentNode;           /* <section> */
+        if (wrapper && wrapper.tagName === 'SECTION') { wrapper.hidden = !show; }
+        if (show) { visible++; }
+      });
+
+      var note = document.getElementById('filter-note');
+      if (!note) {
+        note = document.createElement('div');
+        note.id = 'filter-note';
+        note.className = 'log log--warn mb2';
+        var anchor = document.querySelector('.archive-stat');
+        if (anchor && anchor.parentNode) { anchor.parentNode.appendChild(note); }
+      }
+      if (note) {
+        note.textContent = '[' + stamp() + '] [ФИЛЬТР]: "' + filter + '" -> показано дел: ' + visible +
+                           (visible === 0 ? ' (нет дел этой сложности)' : '');
+      }
+    });
+  });
+
+  /* ==================================================================
+     10. СБРОС ПРОГРЕССА
+     ================================================================== */
+  var resetBtn = document.getElementById('reset-progress');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      var ok = window.confirm('Сбросить локальный прогресс по всем делам архива?');
+      if (!ok) { return; }
+      store.remove(STATE_KEY);
+      state = { solved: {}, hints: {}, attempts: {} };
+      cases.forEach(function (el) {
+        el.classList.remove('is-solved');
+        var input = el.querySelector('input[name="flag"]');
+        var submit = el.querySelector('button[type="submit"]');
+        var hintBtn = el.querySelector('[data-hint-for]');
+        var hintBox = document.getElementById('hint-' + el.id);
+        var log = document.getElementById('log-' + el.id);
+        if (input) { input.readOnly = false; input.value = ''; }
+        if (submit) { submit.disabled = false; submit.textContent = '[ ПРОВЕРИТЬ ]'; }
+        if (hintBtn) { hintBtn.disabled = false; hintBtn.setAttribute('aria-expanded', 'false'); }
+        if (hintBox) { hintBox.classList.remove('is-open'); }
+        if (log) { log.innerHTML = ''; }
+      });
+      renderStats();
+      var note = document.getElementById('filter-note');
+      if (note) { note.textContent = '[' + stamp() + '] [СИСТЕМА]: прогресс сброшен. Архив чист.'; }
+    });
+  }
+
+  /* ==================================================================
+     11. ИНИЦИАЛИЗАЦИЯ
+     ================================================================== */
+  cases.forEach(function (el) {
+    renderCaseVisual(el);
+    if (state.solved[caseIdOf(el)]) {
+      writeLog(el, 'log--ok', '[ВОССТАНОВЛЕНО]: дело закрыто ранее (' + state.solved[caseIdOf(el)] + ' UTC).');
+    }
+  });
+  renderStats();
+
+  /* Приветственная строка в журналы нерешённых дел */
+  cases.forEach(function (el) {
+    if (!state.solved[caseIdOf(el)]) {
+      writeLog(el, '', '[ОЖИДАНИЕ]: введите флаг в формате <span class="green">FLAG{...}</span> и нажмите [ ПРОВЕРИТЬ ].');
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
