@@ -1,0 +1,20 @@
+# Секреты и локальная конфигурация
+.env
+.env.*
+!.env.example
+*.token
+hf_token.txt
+
+# ОС / редакторы
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Зависимости и артефакты сборки (проект статический, но на случай локальных экспериментов)
+node_modules/
+dist/
+build/
+.cache/
+*.log
