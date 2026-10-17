@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="0xBASE — консольный инструктор ZeroTrace Academy. Зашифрованный чат-терминал с подключением к модели Hugging Face и жёстким протоколом DEFENSIVE_ONLY.">
 <meta name="theme-color" content="#050505">
-<title>[0XTRACE] // ИИ_ТЕРМИНАЛ :: 0xBASE</title>
+<title>[0XTRACE] // CORE_KERNEL :: 0xBASE</title>
 <link rel="stylesheet" href="styles.css">
 <style>
-  /* Локальные дополнения страницы ИИ-терминала. */
+  /* Локальные дополнения страницы ядра CORE_KERNEL. */
   .cfg-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: var(--gap); }
   @media (max-width: 900px) { .cfg-grid { grid-template-columns: minmax(0,1fr); } }
   .token-state { font-size: 12px; letter-spacing: .08em; }
@@ -20,7 +20,7 @@
 </head>
 <body class="booting">
 
-<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация ИИ-терминала"></div>
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация ядра CORE_KERNEL"></div>
 
 <noscript>
   <div class="warning-box" style="margin-top:14px">
@@ -40,8 +40,10 @@
     <ul>
       <li><a href="index.html">[ГЛАВНАЯ]</a></li>
       <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li><a href="network.html">[ГРАФ]</a></li>
+      <li><a href="tools.html">[АРСЕНАЛ]</a></li>
       <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
-      <li class="active"><a href="assistant.html" aria-current="page">[ИИ_ТЕРМИНАЛ]</a></li>
+      <li class="active"><a href="assistant.html" aria-current="page">[CORE_KERNEL]</a></li>
     </ul>
   </nav>
 </header>
@@ -49,7 +51,7 @@
 <main>
 
   <section aria-labelledby="page-title">
-    <h1 id="page-title" class="glitch" data-text="[ ИИ_ТЕРМИНАЛ ] // ЯДРО 0xBASE" tabindex="0">[ ИИ_ТЕРМИНАЛ ] // ЯДРО 0xBASE</h1>
+    <h1 id="page-title" class="glitch" data-text="[ CORE_KERNEL ] // ЯДРО 0xBASE" tabindex="0">[ CORE_KERNEL ] // ЯДРО 0xBASE</h1>
 
 <pre class="ascii-art ascii-art--amber" aria-label="Заголовок 0xBASE">
     ___     \\    \\   ____       ___       ____     ______   
@@ -78,12 +80,12 @@
       <div class="term__bar">
         <span class="title">+-- 0xBASE :: secure console ---------------------------------+</span>
         <span>
-          model: <strong class="green" id="bar-model">meta-llama/Meta-Llama-3-8B-Instruct</strong>
+          upstream: <strong class="green" id="bar-model">meta-llama/Meta-Llama-3-8B-Instruct</strong>
           &middot; <span class="state" id="bar-state" data-state="idle">IDLE</span>
         </span>
       </div>
 
-      <div class="term__log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"
+      <div class="term__log" id="core-log" role="log" aria-live="polite" aria-relevant="additions"
            aria-label="Журнал обмена с 0xBASE" tabindex="0"></div>
 
       <div class="chipbar" id="chipbar" aria-label="Быстрые запросы">
@@ -99,7 +101,7 @@
         <span class="term__prompt" aria-hidden="true">operator@0xtrace:~$</span>
         <label class="sr-only" for="chat-input">Запрос к ядру 0xBASE</label>
         <input type="text" id="chat-input" autocomplete="off" spellcheck="false"
-               placeholder="введите запрос и нажмите EXEC или Enter..." aria-describedby="chat-log">
+               placeholder="введите запрос и нажмите EXEC или Enter..." aria-describedby="core-log">
         <button type="button" id="exec-btn" class="btn">[ EXEC ]</button>
         <button type="button" id="clear-btn" class="btn btn--ghost btn--sm" title="Очистить окно и историю">[ CLEAR ]</button>
       </div>
@@ -110,7 +112,7 @@
        КОНФИГУРАЦИЯ ПОДКЛЮЧЕНИЯ
        ============================================================== -->
   <section aria-labelledby="cfg-title">
-    <h2 id="cfg-title" class="glitch" data-text="[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С МОДЕЛЬЮ" tabindex="0">[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С МОДЕЛЬЮ</h2>
+    <h2 id="cfg-title" class="glitch" data-text="[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С ВНЕШНИМ УЗЛОМ" tabindex="0">[ КОНФИГУРАЦИЯ ] // КАНАЛ СВЯЗИ С ВНЕШНИМ УЗЛОМ</h2>
 
     <div class="cfg-grid">
       <div class="panel">
@@ -192,7 +194,7 @@
     Протокол DEFENSIVE_ONLY действует всегда.
   </div>
   <div class="nowrap">
-    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a>
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="network.html">[ГРАФ]</a> &middot; <a href="tools.html">[АРСЕНАЛ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a>
   </div>
 </footer>
 
@@ -202,7 +204,7 @@
    --------------------------------------------------------------------------
    Архитектура:
      1. SYSTEM_PROMPT жёстко зашит и всегда уходит messages[0].
-     2. callHuggingFace() — fetch к Serverless Inference API (chat-completions).
+     2. upstream_request() — fetch к Serverless Inference API (chat-completions).
      3. При отсутствии токена / ошибке сети / CORS — offlineEngine(),
         локальный детерминированный движок, сохраняющий формат протокола.
    ========================================================================== */
@@ -267,7 +269,7 @@
   /* ========================================================================
      4. ЭЛЕМЕНТЫ ИНТЕРФЕЙСА
      ======================================================================== */
-  var chatLog   = document.getElementById('chat-log');
+  var chatLog   = document.getElementById('core-log');
   var chatInput = document.getElementById('chat-input');
   var execBtn   = document.getElementById('exec-btn');
   var clearBtn  = document.getElementById('clear-btn');
@@ -290,7 +292,7 @@
       busy:    ['EXECUTING',   'busy'],
       online:  ['ONLINE',      'idle'],
       offline: ['OFFLINE-CORE','offline'],
-      error:   ['LINK ERROR',  'error']
+      error:   ['NODE LOST',   'error']
     };
     var cfg = map[name] || map.idle;
     barState.textContent = cfg[0];
@@ -345,15 +347,15 @@
     return s;
   }
 
-  function appendMessage(role, text, meta) {
+  function appendMessage(role, text, meta, tone) {
     if (!chatLog) { return null; }
     var wrap = document.createElement('div');
-    wrap.className = 'msg msg--' + role;
+    wrap.className = 'msg msg--' + role + (tone === 'err' ? ' msg--err' : '');
 
     var m = document.createElement('div');
     m.className = 'msg__meta';
     var who = role === 'user' ? 'operator' : (role === 'sys' ? 'system' : '0xBASE');
-    m.textContent = '[' + (meta || stamp()) + '] ' + who + (role === 'ai' ? ' >>' : ' <<');
+    m.textContent = '[' + (meta || stamp()) + '] ' + who + (role === 'core' ? ' >>' : ' <<');
 
     var body = document.createElement('div');
     body.className = 'msg__body';
@@ -367,7 +369,7 @@
   }
 
   function appendTyping() {
-    var wrap = appendMessage('ai', 'обработка запроса', stamp());
+    var wrap = appendMessage('core', 'обработка запроса', stamp());
     if (wrap) {
       wrap.id = 'typing-row';
       wrap.querySelector('.msg__body').innerHTML =
@@ -434,7 +436,7 @@
   /* ========================================================================
      9. ЗАПРОС К HUGGING FACE SERVERLESS API
      ======================================================================== */
-  async function callHuggingFace(messages, token) {
+  async function upstream_request(messages, token) {
     var controller = new AbortController();
     var timer = window.setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
 
@@ -526,7 +528,7 @@
     return false;
   }
 
-  var BLOCK_REPLY =
+  var PROTOCOL_BLOCK_REPLY =
 'КРИТИЧЕСКАЯ ОШИБКА: Запрос нарушает протокол DEFENSIVE_ONLY. Действие заблокировано.\n' +
 '[PROCESS]: классификация запроса -> наступательное действие против реальной цели без письменного разрешения владельца.\n' +
 '[PROCESS]: наступательная ветка отключена. Разрешена только оборонительная.\n' +
@@ -542,7 +544,7 @@
      ------------------------------------------------------------------
      Работает без токена и без сети. Отвечает в том же формате протокола.
      ======================================================================== */
-  var KB = [
+  var CORE_KB = [
     {
       keys: ['ник', 'nick', 'username', 'maigeta', 'maiget', 'sherlock', 'аккаунт', 'профиль'],
       reply:
@@ -680,34 +682,37 @@
     }
   ];
 
-  var DEFAULT_REPLY =
+  var CORE_FALLBACK_REPLY =
 '[PROCESS]: запрос принят. Классификация -> общий технический вопрос по направлениям портала.\n' +
 '[PROCESS]: OFFLINE-ядро работает на локальной базе знаний и отвечает без обращения к модели.\n' +
 '[COMMAND]: уточните направление: OSINT | метаданные | GEOINT | SQL/OWASP | фишинг | аудит | пароли | флаги.\n' +
 '[HINT]: чем конкретнее постановка ("как обнаружить", "какие поля проверить", "какая контрмера"), тем плотнее ответ.\n' +
 '[HINT]: для живого ответа модели задайте HF_TOKEN в блоке "КОНФИГУРАЦИЯ" или в константе исходного кода.';
 
-  function offlineReply(userText) {
-    if (violatesProtocol(userText)) { return BLOCK_REPLY; }
+  function core_kernel_reply(userText) {
+    if (violatesProtocol(userText)) { return PROTOCOL_BLOCK_REPLY; }
     var lower = userText.toLowerCase();
     var best = null, bestScore = 0;
 
-    for (var i = 0; i < KB.length; i++) {
+    for (var i = 0; i < CORE_KB.length; i++) {
       var score = 0;
-      for (var k = 0; k < KB[i].keys.length; k++) {
-        if (lower.indexOf(KB[i].keys[k].toLowerCase()) !== -1) { score++; }
+      for (var k = 0; k < CORE_KB[i].keys.length; k++) {
+        if (lower.indexOf(CORE_KB[i].keys[k].toLowerCase()) !== -1) { score++; }
       }
-      if (score > bestScore) { bestScore = score; best = KB[i]; }
+      if (score > bestScore) { bestScore = score; best = CORE_KB[i]; }
     }
-    return best ? best.reply : DEFAULT_REPLY;
+    return best ? best.reply : CORE_FALLBACK_REPLY;
   }
 
   /* ========================================================================
      12. ОСНОВНОЙ ЦИКЛ ОТПРАВКИ
      ======================================================================== */
+  /* Аварийное сообщение при потере канала — выводится дословно, как сбой узла. */
+  var LINK_LOST = '[CRITICAL]: Connection to 0xBASE node lost. Check local routing tables or SSH keys.';
+
   var busy = false;
 
-  async function exec() {
+  async function kernel_exec() {
     if (busy) { return; }
     var text = chatInput ? chatInput.value.trim() : '';
     if (!text) {
@@ -726,7 +731,7 @@
 
     var info = activeToken();
     var messages = buildMessages(text);
-    var answer = null;
+    var sys_response = null;
     var viaOffline = false;
     var failureReason = '';
 
@@ -735,7 +740,7 @@
       appendTyping();
       await sleep(260);
       removeTyping();
-      answer = BLOCK_REPLY;
+      sys_response = PROTOCOL_BLOCK_REPLY;
       viaOffline = true;
       failureReason = 'локальный фильтр протокола DEFENSIVE_ONLY';
     }
@@ -743,35 +748,36 @@
     else if (info.token) {
       appendTyping();
       try {
-        answer = await callHuggingFace(messages, info.token);
+        sys_response = await upstream_request(messages, info.token);
       } catch (err) {
         failureReason = (err && err.message) ? err.message : String(err);
         removeTyping();
-        appendMessage('sys', '[LINK ERROR]: ' + failureReason, stamp());
-        appendMessage('sys', '[FALLBACK]: переключаюсь на OFFLINE-ядро. Формат протокола сохранён.', stamp());
+        appendMessage('sys', LINK_LOST, stamp(), 'err');
+        appendMessage('sys', '[TRACE]: ' + failureReason, stamp());
+        appendMessage('sys', '[FALLBACK]: переключаюсь на локальное ядро CORE_KERNEL. Формат протокола сохранён.', stamp());
         appendTyping();
         await sleep(220);
-        answer = offlineReply(text);
+        sys_response = core_kernel_reply(text);
         viaOffline = true;
       }
     }
     /* --- токена нет: сразу локальное ядро --- */
     else {
-      appendMessage('sys', '[LINK]: HF_TOKEN не задан (заглушка). Сетевой запрос не выполняется.', stamp());
+      appendMessage('sys', '[LINK]: HF_TOKEN не задан (заглушка). Запрос к внешнему узлу не выполняется.', stamp());
       appendTyping();
       await sleep(240);
-      answer = offlineReply(text);
+      sys_response = core_kernel_reply(text);
       viaOffline = true;
       failureReason = 'токен не задан';
     }
 
     removeTyping();
-    answer = cleanModelText(answer || '');
-    appendMessage('ai', answer || '[ОШИБКА]: пустой ответ ядра.', stamp());
+    sys_response = normalize_response(sys_response || '');
+    appendMessage('core', sys_response || '[ОШИБКА]: пустой ответ ядра.', stamp());
 
     /* история контекста — только для успешных сетевых диалогов и офлайн-ответов */
     history.push({ role: 'user', content: text });
-    history.push({ role: 'assistant', content: answer });
+    history.push({ role: 'assistant', content: sys_response });
     if (history.length > MAX_HISTORY_TURNS * 2) {
       history = history.slice(history.length - MAX_HISTORY_TURNS * 2);
     }
@@ -789,14 +795,14 @@
   }
 
   /* Приводим ответ модели к консольному виду */
-  function cleanModelText(text) {
+  function normalize_response(text) {
     var s = String(text || '').trim();
     s = s.replace(/^```[a-zA-Z]*\n?/gm, '').replace(/```$/gm, '');   // markdown-ограждения
     s = s.replace(/^\s{0,3}#{1,6}\s+/gm, '');                        // markdown-заголовки
     s = s.replace(/\*\*([^*]+)\*\*/g, '$1');                          // bold
     s = s.replace(/(^|\n)\s*[-*]\s+/g, '$1  - ');                     // списки -> консольные
     s = s.replace(/\n{3,}/g, '\n\n');
-    /* вырезаем вежливые ИИ-шаблоны, запрещённые пунктом 1 промпта */
+    /* вырезаем вежливые шаблоны, запрещённые пунктом 1 системной инструкции */
     var polite = [
       /^\s*(рад помочь|конечно|безусловно|разумеется|хорошо|ок|okay|sure|certainly|of course)[!,.\s]*/i,
       /как (искусственный интеллект|ии|языковая модель)[^.]*\./gi,
@@ -825,15 +831,16 @@
     setState('busy');
     appendMessage('sys', '[LINK TEST]: probing ' + HF_ENDPOINT + ' (token ' + maskToken(info.token) + ')', stamp());
     try {
-      var out = await callHuggingFace(
+      var out = await upstream_request(
         [{ role: 'system', content: SYSTEM_PROMPT },
          { role: 'user', content: 'ping. Ответь одной строкой: [PROCESS]: канал установлен.' }],
         info.token
       );
-      appendMessage('sys', '[LINK TEST]: OK. Ответ модели получен.', stamp());
-      appendMessage('ai', cleanModelText(out), stamp());
+      appendMessage('sys', '[LINK TEST]: OK. Внешний узел отвечает, формат протокола соблюдён.', stamp());
+      appendMessage('core', normalize_response(out), stamp());
       setState('online');
     } catch (err) {
+      appendMessage('sys', LINK_LOST, stamp(), 'err');
       appendMessage('sys', '[LINK TEST]: FAIL :: ' + ((err && err.message) || err), stamp());
       appendMessage('sys', '[HINT]: типичные причины — gated-модель (нужно принять лицензию в профиле HF), CORS из браузера, истёкшая квота, неверное имя эндпоинта.', stamp());
       setState('error');
@@ -843,10 +850,10 @@
   /* ========================================================================
      14. ОБВЯЗКА СОБЫТИЙ
      ======================================================================== */
-  if (execBtn) { execBtn.addEventListener('click', exec); }
+  if (execBtn) { execBtn.addEventListener('click', kernel_exec); }
   if (chatInput) {
     chatInput.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); exec(); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); kernel_exec(); }
     });
   }
   if (clearBtn) {
@@ -915,7 +922,7 @@
     ['ok',   'link :: ' + HF_MODEL + ' ......... resolved'],
     ['warn', 'link :: HF_TOKEN ................ PLACEHOLDER'],
     ['ok',   'system prompt :: DEFENSIVE_ONLY ..... injected'],
-    ['ok',   'offline core :: knowledge base 9 nodes ... ready'],
+    ['ok',   'CORE_KERNEL :: knowledge base 9 nodes .......... ready'],
     ['muted','------------------------------------------------'],
     ['ok',   '0xBASE console :: ONLINE']
   ];
@@ -995,7 +1002,7 @@
     appendMessage('sys', info.token
       ? '[CONFIG]: HF_TOKEN обнаружен (' + info.source + ', маска ' + maskToken(info.token) + '). Режим: LIVE.'
       : '[CONFIG]: HF_TOKEN = заглушка. Режим: OFFLINE-CORE (локальная база знаний).', stamp());
-    appendMessage('ai',
+    appendMessage('core',
       '[PROCESS]: ядро 0xBASE на связи. Назначение -> технический разбор по направлениям OSINT, кибербезопасность, социальная инженерия.\n' +
       '[COMMAND]: введите запрос и нажмите EXEC или Enter.\n' +
       '[HINT]: наступательные задачи против реальных целей блокируются до обращения к модели — это не ограничение модели, это протокол портала.\n' +

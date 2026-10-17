@@ -19,7 +19,7 @@
 <noscript>
   <div class="warning-box" style="margin-top:14px">
     <strong>[!]</strong> JavaScript отключён. Статический контент доступен, но интерактивные
-    модули (валидация флагов, симулятор SQL-инъекций, ИИ-терминал) работать не будут.
+    модули (валидация флагов, симулятор SQL-инъекций, ядро CORE_KERNEL) работать не будут.
   </div>
 </noscript>
 
@@ -38,8 +38,10 @@
     <ul>
       <li class="active"><a href="index.html" aria-current="page">[ГЛАВНАЯ]</a></li>
       <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li><a href="network.html">[ГРАФ]</a></li>
+      <li><a href="tools.html">[АРСЕНАЛ]</a></li>
       <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
-      <li><a href="assistant.html">[ИИ_ТЕРМИНАЛ]</a></li>
+      <li><a href="assistant.html">[CORE_KERNEL]</a></li>
     </ul>
   </nav>
 </header>
@@ -81,6 +83,8 @@
     <div class="row mt2">
       <div class="kpi"><span class="kpi__n">3</span><span class="kpi__l">направления</span></div>
       <div class="kpi"><span class="kpi__n">3</span><span class="kpi__l">кейса в архиве</span></div>
+      <div class="kpi"><span class="kpi__n">16</span><span class="kpi__l">узлов в графе</span></div>
+      <div class="kpi"><span class="kpi__n">27</span><span class="kpi__l">утилит в арсенале</span></div>
       <div class="kpi"><span class="kpi__n">1</span><span class="kpi__l">живая лаборатория</span></div>
       <div class="kpi"><span class="kpi__n">0</span><span class="kpi__l">трекеров на сайте</span></div>
     </div>
@@ -194,8 +198,11 @@
           </details>
         </div>
         <div class="module__foot">
-          <span class="dim">&gt; 12 уроков &middot; 3 кейса</span>
-          <a class="btn btn--sm" href="cases.html">[ ОТКРЫТЬ АРХИВ ]</a>
+          <span class="dim">&gt; 12 уроков &middot; 3 кейса &middot; граф связей</span>
+          <span class="row" style="gap:6px">
+            <a class="btn btn--sm" href="cases.html">[ ОТКРЫТЬ АРХИВ ]</a>
+            <a class="btn btn--sm btn--ghost" href="network.html">[ ГРАФ ]</a>
+          </span>
         </div>
       </article>
 
@@ -229,8 +236,11 @@
           </details>
         </div>
         <div class="module__foot">
-          <span class="dim">&gt; 10 уроков &middot; 1 стенд</span>
-          <a class="btn btn--sm btn--amber" href="cybersec.html">[ ВОЙТИ В ЛАБОРАТОРИЮ ]</a>
+          <span class="dim">&gt; 10 уроков &middot; 1 стенд &middot; 27 утилит</span>
+          <span class="row" style="gap:6px">
+            <a class="btn btn--sm btn--amber" href="cybersec.html">[ ВОЙТИ В ЛАБОРАТОРИЮ ]</a>
+            <a class="btn btn--sm btn--ghost" href="tools.html">[ АРСЕНАЛ ]</a>
+          </span>
         </div>
       </article>
 
@@ -292,17 +302,23 @@
 
 <span class="k">01</span>  Прочитать манифест выше. Seriously. Три ограничения — не формальность.
 <span class="k">02</span>  <span class="v">cases.html</span>      -> взять CASE-001, пройти по подсказке, сдать флаг.
-<span class="k">03</span>  <span class="v">cybersec.html</span>   -> повторить инъекцию на локальном симуляторе,
+<span class="k">03</span>  <span class="v">network.html</span>    -> запустить RUN TRACE SIMULATION и посмотреть,
+                        как из одного ника вырастает цепочка до личности.
+<span class="k">04</span>  <span class="v">tools.html</span>      -> подобрать утилиту под задачу в арсенале,
+                        проверить её правовой статус.
+<span class="k">05</span>  <span class="v">cybersec.html</span>   -> повторить инъекцию на локальном симуляторе,
                         затем прочитать блок «Как это лечится».
-<span class="k">04</span>  <span class="v">assistant.html</span>  -> задать 0xBASE технический вопрос по пройденному.
+<span class="k">06</span>  <span class="v">assistant.html</span>  -> задать ядру 0xBASE технический вопрос по пройденному.
 
 <span class="c"># Флаги проверяются локально в браузере. На сервер ничего не уходит.</span>
 <span class="c"># Формат флага: FLAG{...} — регистр и пробелы не важны.</span>
 </pre>
       <div class="row mt1">
         <a class="btn" href="cases.html">[ КЕЙСЫ ]</a>
+        <a class="btn" href="network.html">[ ГРАФ ]</a>
+        <a class="btn btn--ghost" href="tools.html">[ АРСЕНАЛ ]</a>
         <a class="btn btn--amber" href="cybersec.html">[ ЛАБОРАТОРИЯ ]</a>
-        <a class="btn btn--ghost" href="assistant.html">[ ИИ_ТЕРМИНАЛ ]</a>
+        <a class="btn" href="assistant.html">[ CORE_KERNEL ]</a>
       </div>
     </div>
   </section>
@@ -320,7 +336,8 @@
     систем и людей без письменного разрешения владельца запрещено и преследуется по закону.
   </div>
   <div class="nowrap">
-    build 2026.10.17 &middot; <span class="green">no cookies</span> &middot; <span class="green">no trackers</span> &middot; MIT
+    <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="network.html">[ГРАФ]</a> &middot; <a href="tools.html">[АРСЕНАЛ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a> &middot; <a href="assistant.html">[CORE_KERNEL]</a>
+    <span class="dim">// build 2026.10.17 &middot; no cookies &middot; no trackers &middot; MIT</span>
   </div>
 </footer>
 
