@@ -24,7 +24,7 @@
      11. ЛОГИ И СТАТУСНЫЕ СООБЩЕНИЯ
      12. ВКЛАДКИ-РАСКРЫВАШКИ ([+] / [-])
      13. ЛАБОРАТОРИЯ SQL-ИНЪЕКЦИЙ
-     14. ИИ-ТЕРМИНАЛ (ЧАТ)
+     14. CORE_KERNEL (assistant.html)
      15. ТАБЛИЦЫ
      16. ПОДВАЛ
      17. УТИЛИТЫ
@@ -1072,7 +1072,7 @@ details.tab > .tab__content {
 
 
 /* ==========================================================================
-   14. ИИ-ТЕРМИНАЛ (assistant.html)
+   14. CORE_KERNEL (assistant.html)
    ========================================================================== */
 .term {
   border: var(--border);
@@ -1120,11 +1120,11 @@ details.tab > .tab__content {
   margin-bottom: 2px;
 }
 .msg--user .msg__meta { color: var(--amber); }
-.msg--ai   .msg__meta { color: var(--green); }
+.msg--core   .msg__meta { color: var(--green); }
 .msg--sys  .msg__meta { color: var(--text-dim); }
 .msg__body { border-left: 2px solid var(--green-dark); padding-left: 10px; }
 .msg--user .msg__body { border-left-color: var(--amber-dim); color: var(--text-bright); }
-.msg--ai   .msg__body { border-left-color: var(--green-dim);  color: var(--green); }
+.msg--core   .msg__body { border-left-color: var(--green-dim);  color: var(--green); }
 .msg--sys  .msg__body { border-left-color: #2a2a2a; color: var(--text-dim); font-size: 12.5px; }
 .msg--err  .msg__body { border-left-color: var(--red-dim); color: var(--red); }
 .msg--block .msg__body { border-left-color: var(--red-dim); color: var(--amber); }
@@ -1334,5 +1334,367 @@ table.data tbody tr:hover td { background: #0b1a10; color: var(--text-bright); }
 
 /* Явное скрытие по атрибуту hidden (страховка от display:flex/inline-block) */
 [hidden] { display: none !important; }
+
+
+/* ==========================================================================
+   21. ТАКТИЧЕСКИЙ АНАЛИЗ СВЯЗЕЙ (network.html)
+   ========================================================================== */
+/* Двухпанельный интерфейс: 70% граф / 30% консоль */
+.tac-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  gap: var(--gap);
+  align-items: start;
+  margin-bottom: 26px;
+}
+@media (max-width: 1100px) {
+  .tac-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.graph-panel { min-width: 0; }
+
+/* Контейнер графа: матово-чёрная координатная сетка */
+#network-graph {
+  position: relative;
+  width: 100%;
+  height: clamp(430px, 62vh, 720px);
+  border: 1px solid var(--green-dim);
+  background-color: #030603;
+  background-image:
+    linear-gradient(rgba(51,255,51,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51,255,51,.045) 1px, transparent 1px),
+    linear-gradient(rgba(51,255,51,.10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51,255,51,.10) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 45%, rgba(51,255,51,.05) 0%, rgba(0,0,0,0) 62%);
+  background-size: 26px 26px, 26px 26px, 130px 130px, 130px 130px, 100% 100%;
+  overflow: hidden;
+  cursor: crosshair;
+}
+#network-graph canvas,
+#network-graph > div { position: absolute; }
+
+.graph-canvas,
+.light-layer {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.graph-canvas { z-index: 4; pointer-events: none; }
+.light-layer  { z-index: 5; pointer-events: none; }
+
+/* HUD поверх графа */
+.graph-hud {
+  top: 0; left: 0; right: 0;
+  z-index: 6;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 5px 9px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: linear-gradient(to bottom, rgba(3,6,3,.94), rgba(3,6,3,0));
+  border-bottom: 1px solid rgba(29,122,29,.5);
+  pointer-events: none;
+}
+.graph-hud b { color: var(--green); font-weight: 700; }
+.graph-hud .hud-item { white-space: nowrap; }
+
+/* Заглушка пустого графа */
+.graph-empty {
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: rgba(3,6,3,.72);
+}
+.graph-empty pre {
+  color: var(--green-dim);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+  border: 1px dashed var(--green-dim);
+  padding: 14px 18px;
+  background: #030603;
+}
+
+/* Легенда классов узлов: жёсткие квадраты, без скруглений */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--green-dark);
+  background: #030603;
+  font-size: 11px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.legend__i { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.legend__i > i {
+  display: inline-block;
+  width: 11px; height: 11px;
+  border: 1px solid currentColor;
+  background: currentColor;
+}
+.legend--nick     { color: #ffb000; }
+.legend--contact  { color: #33ff33; }
+.legend--identity { color: #ff3333; }
+.legend--geo      { color: #4d94ff; }
+.legend--closed   { color: #7a1a15; }
+.legend--closed > i { background: transparent; border-style: dashed; }
+
+/* Демонстрация импульса трассировки — CSS-анимация бегущей точки по линии */
+.pulse-demo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--green-dark);
+  background: #030603;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.pulse-demo__l { color: var(--amber); white-space: nowrap; }
+.pulse-demo__r { color: var(--green); white-space: nowrap; }
+.pulse-line {
+  position: relative;
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 60px;
+  background: linear-gradient(90deg,
+              rgba(255,176,0,0) 0%, rgba(29,122,29,.9) 12%,
+              rgba(29,122,29,.9) 88%, rgba(51,255,51,0) 100%);
+  overflow: hidden;
+}
+.pulse-line > i {
+  position: absolute;
+  top: -2px;
+  left: -6px;
+  width: 5px;
+  height: 5px;
+  background: var(--green);
+  box-shadow: 0 0 9px var(--green), 0 0 18px rgba(51,255,51,.5);
+  animation: pulse-run 2.7s linear infinite;
+}
+@keyframes pulse-run {
+  0%   { left: -6px;   opacity: 0; }
+  6%   { opacity: 1; }
+  94%  { opacity: 1; }
+  100% { left: 100%;   opacity: 0; }
+}
+
+/* Показания движка отрисовки */
+.engine-readout {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--green);
+  word-break: break-word;
+}
+.engine-readout + .engine-readout { margin-top: 5px; }
+
+/* Консоль тактического анализа */
+.core-console { min-width: 0; }
+.core-log {
+  height: clamp(360px, 56vh, 640px);
+  max-height: none;
+  overflow-y: auto;
+  font-size: 12.5px;
+  line-height: 1.58;
+  border: 1px solid var(--green-dark);
+}
+.core-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--green-dark);
+  background: #030603;
+  font-size: 11px;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.core-strip b { color: var(--amber); font-weight: 700; }
+
+/* Пояснение к управлению графом */
+.lab-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  border-left: 2px solid var(--green-dark);
+  padding-left: 10px;
+}
+
+
+/* ==========================================================================
+   22. АРСЕНАЛ УТИЛИТ (tools.html)
+   ========================================================================== */
+.filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: flex-end;
+}
+.filter-search { flex: 1 1 300px; min-width: 240px; }
+.filter-group  { flex: 0 1 auto; }
+.filter-group select {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--green);
+  background: var(--bg-input);
+  border: 1px solid var(--green-dim);
+  padding: 6px 8px;
+}
+.filter-group select:focus { outline: none; border-color: var(--green); background: #04100a; }
+
+.count-line {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--green-dark);
+  border-left: 2px solid var(--amber);
+  background: #030603;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  word-break: break-word;
+}
+
+/* Сетка карточек */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: var(--gap);
+  margin-bottom: 20px;
+}
+@media (max-width: 720px) {
+  .tool-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Терминальная карточка утилиты */
+.tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid var(--green-dim);
+  border-left-width: 3px;
+  background: var(--bg-raised);
+  padding: 0 0 12px;
+  transition: box-shadow .15s linear, transform .15s linear, border-color .15s linear;
+}
+.tool-card:hover,
+.tool-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 34px rgba(51,255,51,.05), 0 0 16px rgba(51,255,51,.14);
+}
+.tool-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 11px;
+  border-bottom: 1px dashed var(--green-dim);
+}
+.tool-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: none;
+  word-break: break-word;
+}
+.tool-card__id { color: var(--text-dim); font-size: 11px; letter-spacing: .12em; white-space: nowrap; }
+.tool-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 11px;
+}
+.tool-card__desc {
+  padding: 0 11px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+}
+.tool-card .label { padding: 0 11px; margin-bottom: 4px; }
+.tool-card__cmd {
+  display: block;
+  margin: 0 11px;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--amber);
+  background: #0a0a05;
+  border: 1px solid var(--amber-dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+  cursor: pointer;
+  transition: background-color .12s linear, color .12s linear;
+}
+.tool-card__cmd:hover { background: var(--amber); color: #000; border-color: var(--amber); }
+.tool-card__cmd:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.tool-card__cmd.is-copied { background: var(--green); color: #000; border-color: var(--green); }
+.tool-card__cmd.is-failed { background: #120605; color: var(--red); border-color: var(--red-dim); }
+.tool-card__extra {
+  padding: 0 11px;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  border-left: 2px solid var(--green-dark);
+  margin-left: 11px;
+}
+.tool-card__foot {
+  margin-top: auto;
+  padding: 8px 11px 0;
+  border-top: 1px dashed var(--green-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tool-card__foot a { font-size: 12px; letter-spacing: .08em; align-self: flex-start; }
+.tool-card__legal {
+  margin: 0;
+  padding: 7px 9px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--amber);
+  background: #100b00;
+  border: 1px solid var(--amber-dim);
+}
+
+/* Табличный вид арсенала */
+.tools-table code.tool-card__cmd {
+  display: inline-block;
+  margin: 0;
+  padding: 3px 6px;
+  font-size: 11.5px;
+  white-space: normal;
+  word-break: break-all;
+}
+.tools-table__name { font-weight: 700; white-space: nowrap; }
+.tools-table__desc { min-width: 260px; font-size: 12px; color: var(--text); }
+
+/* Правовая легенда арсенала */
+.legal-key {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.legal-key .badge { align-self: flex-start; margin-bottom: 2px; }
 
 /* ============================ КОНЕЦ styles.css ============================ */

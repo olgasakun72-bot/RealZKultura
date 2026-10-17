@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Тактический анализ связей: интерактивный граф улик портала ZeroTrace Academy. Трассировка цепочек от первичной улики до установленной личности. Данные синтетические.">
+<meta name="theme-color" content="#050505">
+<title>[0XTRACE] // TRACE :: ТАКТИЧЕСКИЙ АНАЛИЗ СВЯЗЕЙ</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="booting">
+
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация графа"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> Граф связей строится JavaScript'ом. Без него доступна только таблица
+    улик в нижней части страницы.
+  </div>
+</noscript>
+
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">tac/trace</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> ENGINE <span id="engine-tag">BOOT</span> &middot; <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">[ГЛАВНАЯ]</a></li>
+      <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li class="active"><a href="network.html" aria-current="page">[ГРАФ]</a></li>
+      <li><a href="tools.html">[АРСЕНАЛ]</a></li>
+      <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
+      <li><a href="assistant.html">[CORE_KERNEL]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <section aria-labelledby="page-title">
+    <h1 id="page-title" class="sr-only">Тактический анализ связей</h1>
+
+<pre class="ascii-art ascii-art--amber" aria-label="Баннер TRACE">  ______     _____      ___       _____    ______   
+  \____\    |  __ \    / \ \     / ____\  |  ____\  
+     __     | |\) |   |  _  |   | |       |  |__    
+     __     |  _  /   | | | |   | |___    |  ___\   
+     __     |_| \_\   |_| |_|    \____|   |______\  </pre>
+
+    <div class="row mt2" style="justify-content:space-between;align-items:flex-start">
+      <div class="panel" style="flex:1 1 420px">
+        <div class="panel-title">
+          <span class="rule">+---</span><span>НАЗНАЧЕНИЕ УЗЛА</span><span class="rule">---+</span>
+          <span class="path">tac/trace :: link analysis workstation</span>
+        </div>
+        <p class="mb1" style="font-size:13.5px">
+          Рабочее место связного анализа. Граф показывает, как из одного слабого идентификатора
+          вырастает цепочка подтверждений. Клик по узлу поднимает <strong>маршрут от первичной
+          улики</strong> и выгружает техническое досье в консоль справа.
+        </p>
+        <p class="mb0 dim" style="font-size:12.5px">
+          Матрица дела: <code>CASE-001 «Исчезнувший эдвайзер»</code>. Все значения синтетические,
+          телефон и IP маскированы, документный класс закрыт по регламенту.
+        </p>
+      </div>
+      <div class="panel" style="flex:0 1 300px;border-color:var(--amber)">
+        <div class="panel-title" style="border-bottom-color:var(--amber-dim)">
+          <span class="rule" style="color:var(--amber-dim)">+---</span><span>ДВИЖОК</span><span class="rule" style="color:var(--amber-dim)">---+</span>
+        </div>
+        <div class="engine-readout" id="engine-readout">[ENGINE]: инициализация…</div>
+        <div class="engine-readout dim" id="engine-detail">проверка источников…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       ДВУХПАНЕЛЬНЫЙ ИНТЕРФЕЙС 70/30
+       ============================================================== -->
+  <section class="tac-grid" aria-label="Граф и консоль тактического анализа">
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ: ГРАФ (70%) -->
+    <div class="panel graph-panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>EVIDENCE GRAPH</span><span class="rule">---+</span>
+        <span class="path" id="graph-path">case:CASE-001 / nodes:0 / links:0</span>
+      </div>
+
+      <div id="network-graph" role="application"
+           aria-label="Интерактивный граф связей между уликами">
+        <canvas id="graph-canvas" class="graph-canvas" aria-hidden="true"></canvas>
+        <canvas id="light-layer" class="light-layer" aria-hidden="true"></canvas>
+        <div class="graph-hud" id="graph-hud">
+          <span class="hud-item">zoom <b id="hud-zoom">1.00</b></span>
+          <span class="hud-item">sel <b id="hud-sel">—</b></span>
+          <span class="hud-item">route <b id="hud-route">0</b></span>
+          <span class="hud-item">fps <b id="hud-fps">—</b></span>
+        </div>
+        <div class="graph-empty" id="graph-empty">
+          <pre>GRAF::EMPTY
+> нажмите [ RUN TRACE SIMULATION ]
+> или [ ЗАГРУЗИТЬ ПОЛНЫЙ ГРАФ ]</pre>
+        </div>
+      </div>
+
+      <div class="legend" aria-label="Классы узлов">
+        <span class="legend__i legend--nick"><i></i>НИКНЕЙМ / АККАУНТ</span>
+        <span class="legend__i legend--contact"><i></i>EMAIL / ТЕЛЕФОН</span>
+        <span class="legend__i legend--identity"><i></i>ФИО / ДОКУМЕНТ</span>
+        <span class="legend__i legend--geo"><i></i>ГЕО / IP</span>
+        <span class="legend__i legend--closed"><i></i>КЛАСС ЗАКРЫТ</span>
+      </div>
+
+      <div class="pulse-demo" aria-hidden="true">
+        <span class="pulse-demo__l">УЛИКА</span>
+        <span class="pulse-line"><i></i><i style="animation-delay:.9s"></i><i style="animation-delay:1.8s"></i></span>
+        <span class="pulse-demo__r">ВЫВОД</span>
+      </div>
+
+      <div class="row mt1">
+        <button type="button" id="btn-trace" class="btn btn--amber">[ RUN TRACE SIMULATION ]</button>
+        <button type="button" id="btn-full" class="btn">[ ЗАГРУЗИТЬ ПОЛНЫЙ ГРАФ ]</button>
+        <button type="button" id="btn-relayout" class="btn btn--ghost btn--sm">[ ПЕРЕСТРОИТЬ РАСКЛАДКУ ]</button>
+        <button type="button" id="btn-clear-sel" class="btn btn--ghost btn--sm">[ СБРОСИТЬ ВЫДЕЛЕНИЕ ]</button>
+      </div>
+      <p class="lab-note mt1">
+        Управление: клик — досье и маршрут, колесо — масштаб, перетаскивание узла — ручная
+        раскладка, перетаскивание фона — панорама. Импульсы на линиях показывают направление
+        вывода: от улики к утверждению.
+      </p>
+    </div>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ: КОНСОЛЬ (30%) -->
+    <div class="panel core-console">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>КОНСОЛЬ ТАКТИЧЕСКОГО АНАЛИЗА</span><span class="rule">---+</span>
+      </div>
+      <div class="term__bar" style="border:1px solid var(--green-dark);border-bottom:0">
+        <span class="title">0xBASE :: core-log</span>
+        <span class="state" id="core-state" data-state="idle">IDLE</span>
+      </div>
+      <div class="log core-log" id="core-log" role="log" aria-live="polite" aria-label="Системный журнал" tabindex="0"></div>
+      <div class="core-strip">
+        <span>NODES <b id="strip-nodes">0</b></span>
+        <span>LINKS <b id="strip-links">0</b></span>
+        <span>HOPS <b id="strip-hops">0</b></span>
+        <span>SEL <b id="strip-sel">—</b></span>
+      </div>
+      <div class="row mt1">
+        <button type="button" id="btn-clear-log" class="btn btn--ghost btn--sm">[ ОЧИСТИТЬ ЖУРНАЛ ]</button>
+        <button type="button" id="btn-dump" class="btn btn--ghost btn--sm">[ ДАМП ТАБЛИЦЫ СВЯЗЕЙ ]</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       ТАБЛИЦА УЛИК (статический дубль графа, доступна без JS)
+       ============================================================== -->
+  <section aria-labelledby="matrix-title">
+    <h2 id="matrix-title" class="glitch" data-text="[ МАТРИЦА СВЯЗЕЙ ] // ТЕКСТОВЫЙ ДАМП" tabindex="0">[ МАТРИЦА СВЯЗЕЙ ] // ТЕКСТОВЫЙ ДАМП</h2>
+    <div class="panel">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>link-matrix.tsv</span><span class="rule">---+</span>
+        <span class="path">тот же набор данных, что и в графе</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data" id="link-matrix">
+          <caption>Узел, класс, способ получения и установленные связи</caption>
+          <thead>
+            <tr><th>ID</th><th>Класс</th><th>Значение</th><th>Площадка</th><th>Способ получения</th><th>Связи</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>n01</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>@crypto_wizard99</td><td>Telegram</td><td>первичная улика от оператора</td><td>n02 n03 n04 n05 n06 n08</td></tr>
+            <tr><td>n02</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>@wizard_dev</td><td>Telegram</td><td>перекрёстная проверка публичных профилей</td><td>n01 n06</td></tr>
+            <tr><td>n03</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>crypto-wizard99</td><td>GitHub</td><td>обход площадок по нику</td><td>n01 n07</td></tr>
+            <tr><td>n04</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>crypto_wizard99</td><td>Steam (2013)</td><td>обход площадок по нику</td><td>n01 n06</td></tr>
+            <tr><td>n05</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>u/crypto_wizard99</td><td>Reddit (кэш)</td><td>обход площадок + архивный снапшот</td><td>n01 n07</td></tr>
+            <tr><td>n06</td><td style="color:var(--amber)">НИКНЕЙМ</td><td>pHash 8f2c…d91a</td><td>аватар</td><td>перцептивный хеш, расстояние d=3</td><td>n01 n02 n04</td></tr>
+            <tr><td>n07</td><td style="color:var(--green)">КОНТАКТ</td><td>a.g.xxxxxxxx@gmail.com</td><td>git-коммиты</td><td>публичный автор коммитов 2019-2021</td><td>n03 n05 n09 n15</td></tr>
+            <tr><td>n08</td><td style="color:var(--green)">КОНТАКТ</td><td>a.gates@nordwave-labs.io</td><td>переписка</td><td>публичная ветка обсуждения контракта</td><td>n01 n13 n15</td></tr>
+            <tr><td>n09</td><td style="color:var(--green)">КОНТАКТ</td><td>+7 9** ***-41-02</td><td>профиль</td><td>разбор публичного профиля мессенджера</td><td>n07 n10</td></tr>
+            <tr><td>n10</td><td style="color:var(--green)">КОНТАКТ</td><td>+375 29 ***-18-77</td><td>объявления</td><td>перекрёстный пост на площадке объявлений, 2021</td><td>n09 n12</td></tr>
+            <tr><td>n11</td><td style="color:#5b9bff">ГЕО</td><td>55.7558, 37.6173</td><td>кадр</td><td>геометрия тени + обратная задача SunCalc</td><td>n12 n13 n15</td></tr>
+            <tr><td>n12</td><td style="color:#5b9bff">ГЕО</td><td>185.**.**.14 / AS204601</td><td>скриншот</td><td>самостоятельно опубликованный трейс</td><td>n10 n11 n14</td></tr>
+            <tr><td>n13</td><td style="color:#5b9bff">ГЕО</td><td>UTC+03:00</td><td>PDF</td><td>часовой пояс в метаданных документа</td><td>n08 n11</td></tr>
+            <tr><td>n14</td><td style="color:#5b9bff">ГЕО</td><td>BY / Homiel voblasc'</td><td>GeoIP</td><td>справочник ASN и страновой привязки</td><td>n12</td></tr>
+            <tr><td>n15</td><td style="color:var(--red)">ЛИЧНОСТЬ</td><td>Alex Gates</td><td>реестр события</td><td>список участников конференции 2021 + альбом</td><td>n07 n08 n11 n16</td></tr>
+            <tr><td>n16</td><td style="color:var(--red)">ЛИЧНОСТЬ</td><td>[REDACTED]</td><td>—</td><td>класс закрыт регламентом, не извлекался</td><td>n15</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       МЕТОДИКА СВЯЗНОГО АНАЛИЗА
+       ============================================================== -->
+  <section aria-labelledby="method-title">
+    <h2 id="method-title" class="glitch" data-text="[ МЕТОДИКА ] // КАК ЧИТАТЬ ГРАФ" tabindex="0">[ МЕТОДИКА ] // КАК ЧИТАТЬ ГРАФ</h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title"><span class="rule">+---</span><span>ТИПЫ СВЯЗЕЙ</span><span class="rule">---+</span></div>
+        <ul class="mb0">
+          <li><strong>Твёрдая связь</strong> — подтверждена двумя источниками: аватар + ник, почта + реестр.
+              Вес высокий, идёт в вывод.</li>
+          <li><strong>Мягкая связь</strong> — одно совпадение без перекрёстной проверки. Вес низкий,
+              в отчёт попадает только как гипотеза.</li>
+          <li><strong>Транзитивная связь</strong> — получена через промежуточный узел (ник → почта → ФИО).
+              Ошибка накапливается на каждом переходе: три мягких перехода подряд выводом не являются.</li>
+          <li><strong>Закрытый класс</strong> — пунктир. Данные существуют, но по регламенту не извлекаются
+              и не хранятся в архиве.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="rule">+---</span><span>ПОРЯДОК РАБОТЫ</span><span class="rule">---+</span></div>
+        <ol class="mb0">
+          <li>Зафиксировать первичную улику и её источник получения.</li>
+          <li>Развернуть граф, не интерпретируя: сначала узлы, потом смысл.</li>
+          <li>Для каждого узла записать способ получения — без него узел не улика, а догадка.</li>
+          <li>Проверить маршрут от корня до целевого узла: сколько переходов, какие из них мягкие.</li>
+          <li>Отсечь ветки, ведущие к данным, не относящимся к делу.</li>
+          <li>Вывод формулировать с уровнем уверенности и обязательной контрмерой.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="warning-box mt2">
+      <strong>[ПРАВОВАЯ РАМКА]</strong> Граф построен на синтетических данных учебного дела.
+      Связный анализ легко превращается в слежку: собирая узлы о реальном человеке без его ведома
+      и без законного основания, вы строите не расследование, а досье. Документные идентификаторы,
+      данные родственников, здоровье и частная жизнь в рабочий граф не заносятся — на этой странице
+      такой узел намеренно показан как закрытый класс.
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // Узел связного анализа. Графическое ядро загружается
+    с CDN; при недоступности сети страница переключается на встроенный рендерер на canvas —
+    набор данных и логика трассировки при этом не меняются.
+  </div>
+  <div class="nowrap">
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="tools.html">[АРСЕНАЛ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a> &middot; <a href="assistant.html">[CORE_KERNEL]</a>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   TRACE :: ядро связного анализа
+   --------------------------------------------------------------------------
+   Слои:
+     1. EVIDENCE_NODES / EVIDENCE_LINKS — единственный источник правды.
+     2. trace_route() — BFS-маршрут от первичной улики до выбранного узла.
+     3. Адаптеры отрисовки: CytoscapeAdapter (CDN) и CoreRenderer (встроенный
+        canvas-рендерер). Интерфейс одинаковый, логика консоли от движка не зависит.
+     4. LightLayer — общий слой свечения узлов и импульсов трассировки.
+        Cytoscape 3.34.x не имеет shadow-* свойств стиля, поэтому подсветка
+        рисуется собственным слоем поверх полотна в режиме 'lighter'.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ========================================================================
+     1. КОНСТАНТЫ ЯДРА
+     ======================================================================== */
+  var KERNEL_ID      = '0xBASE';
+  var ENGINE_VERSION = '3.34.4';
+  var ENGINE_TIMEOUT = 7000;
+
+  /* Официальные CDN пакета cytoscape (MIT). Контрольная сумма посчитана
+     по файлу dist/cytoscape.min.js версии 3.34.4 из реестра npm. */
+  var ENGINE_SRI = 'sha384-lyd1lDWZ623YSUJ/wMQH50y+T81dWKJk7ZoFdYWXQS83b0+QpW0pgdfXEnQnXL/X';
+  var ENGINE_SOURCES = [
+    { name: 'jsdelivr', url: 'https://cdn.jsdelivr.net/npm/cytoscape@' + ENGINE_VERSION + '/dist/cytoscape.min.js' },
+    { name: 'unpkg',    url: 'https://unpkg.com/cytoscape@' + ENGINE_VERSION + '/dist/cytoscape.min.js' }
+  ];
+
+  /* Классы узлов и их цвета — по спецификации тактической схемы */
+  var KIND = {
+    nick:     { color: '#ffb000', label: 'НИКНЕЙМ/АККАУНТ', w: 34, h: 22 },
+    contact:  { color: '#33ff33', label: 'EMAIL/ТЕЛЕФОН',   w: 30, h: 20 },
+    identity: { color: '#ff3333', label: 'ФИО/ДОКУМЕНТ',    w: 32, h: 22 },
+    geo:      { color: '#0066ff', label: 'ГЕО/IP',          w: 28, h: 20 }
+  };
+
+  var ROOT_NODE = 'n01';           /* первичная улика, корень трассировки */
+  var VIRTUAL_W = 1480;            /* виртуальное пространство раскладки  */
+  var VIRTUAL_H = 940;
+
+  /* ========================================================================
+     2. ДАННЫЕ ДЕЛА (прописаны вручную)
+     ------------------------------------------------------------------
+     Координаты x/y — ручная тактическая раскладка: слева первичная улика,
+     справа установленная личность. Обе подсистемы отрисовки используют
+     одни и те же координаты, поэтому граф выглядит идентично.
+     ======================================================================== */
+  var EVIDENCE_NODES = [
+    {
+      id: 'n01', kind: 'nick', label: 'crypto_wizard99', platform: 'Telegram', x: 110, y: 470,
+      value: '@crypto_wizard99', status: 'EXTRACTED', weight: 'PRIMARY',
+      method: 'Primary evidence / operator input',
+      geo: 'UTC+3 (окно активности 06:00-22:00)',
+      links: 'Связан с GitHub crypto-wizard99, Steam (2013), Reddit (кэш), Telegram @wizard_dev.',
+      note: 'Первичная улика. Никнейм зафиксирован операционным директором 2024-11-08, источник — служебная переписка.'
+    },
+    {
+      id: 'n02', kind: 'nick', label: '@wizard_dev', platform: 'Telegram', x: 300, y: 740,
+      value: '@wizard_dev', status: 'EXTRACTED', weight: 'SOFT',
+      method: 'Public profile cross-reference',
+      geo: 'RU/BY',
+      links: 'Связан с Telegram @crypto_wizard99 и аватаром pHash 8f2c…d91a.',
+      note: 'Второй аккаунт. Совпадает описание проекта и стиль сообщений; подтверждение только по аватару, связь мягкая.'
+    },
+    {
+      id: 'n03', kind: 'nick', label: 'crypto-wizard99', platform: 'GitHub', x: 330, y: 170,
+      value: 'github.com/crypto-wizard99', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Nickname sweep (400+ площадок)',
+      geo: '—',
+      links: 'Связан с 41 репозиторием и почтой автора коммитов a.g.xxxxxxxx@gmail.com.',
+      note: 'Дефис вместо подчёркивания — типичная мутация ника при занятом имени. Вклад в две DeFi-библиотеки, 2019-2022.'
+    },
+    {
+      id: 'n04', kind: 'nick', label: 'crypto_wizard99', platform: 'Steam', x: 300, y: 330,
+      value: 'steamcommunity.com/id/crypto_wizard99', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Nickname sweep (400+ площадок)',
+      geo: '—',
+      links: 'Профиль создан 2013; аватар совпадает с аватаром Telegram.',
+      note: 'Возраст профиля исключает случайное занятие ника в 2024 году — сильный признак принадлежности.'
+    },
+    {
+      id: 'n05', kind: 'nick', label: 'u/crypto_wizard99', platform: 'Reddit (кэш)', x: 300, y: 560,
+      value: 'reddit.com/u/crypto_wizard99', status: 'ARCHIVED', weight: 'SOFT',
+      method: 'Nickname sweep + archive snapshot',
+      geo: '—',
+      links: 'Профиль удалён; живёт в архивном снапшоте от 2018-06-30.',
+      note: 'Содержательный пост в r/personalfinance снят модератором. В кэше читается подпись "коллеги знают меня как Alex".'
+    },
+    {
+      id: 'n06', kind: 'nick', label: 'pHash 8f2c…d91a', platform: 'аватар', x: 500, y: 860,
+      value: 'perceptual hash 8f2c41ab…d91a', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Avatar perceptual hash match',
+      geo: '—',
+      links: 'Связывает Telegram @crypto_wizard99, @wizard_dev и Steam (расстояние d=3 и d=1).',
+      note: 'Перцептивный хеш устойчив к пережатию и смене размера. Совпадение d<=4 считается тем же изображением.'
+    },
+    {
+      id: 'n07', kind: 'contact', label: 'a.g.xxxxxxxx@gmail.com', platform: 'git-коммиты', x: 580, y: 170,
+      value: 'a.g.xxxxxxxx@gmail.com', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Git author email leak (2019-2021)',
+      geo: '—',
+      links: 'Связан с GitHub crypto-wizard99, кэшем Reddit, телефоном +7 9** ***-41-02.',
+      note: 'До включения privacy-режима почта автора коммитов была публичной. Инициалы "A. G." — первая зацепка к ФИО.'
+    },
+    {
+      id: 'n08', kind: 'contact', label: 'a.gates@nordwave-labs.io', platform: 'переписка', x: 580, y: 340,
+      value: 'a.gates@nordwave-labs.io', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Public contract thread',
+      geo: 'UTC+3',
+      links: 'Связан с первичной уликой, часовым поясом PDF и установленным ФИО.',
+      note: 'Корпоративный адрес из открытой ветки обсуждения. Локальная часть содержит фамилию — совпадает с инициалами из n07.'
+    },
+    {
+      id: 'n09', kind: 'contact', label: '+7 9** ***-41-02', platform: 'профиль', x: 790, y: 250,
+      value: '+7 9** ***-41-02 (маскирован)', status: 'EXTRACTED', weight: 'SOFT',
+      method: 'Messenger Parsing',
+      geo: 'RU/BY',
+      links: 'Связан с Telegram @wizard_dev.',
+      note: 'Номер открыт в публичном профиле. Маскирован намеренно: в архиве хранится хеш, а не значение.'
+    },
+    {
+      id: 'n10', kind: 'contact', label: '+375 29 ***-18-77', platform: 'объявления', x: 790, y: 430,
+      value: '+375 29 ***-18-77 (маскирован)', status: 'EXTRACTED', weight: 'SOFT',
+      method: 'Classifieds cross-post (2021)',
+      geo: 'BY',
+      links: 'Связан с номером +7 9** ***-41-02 и IP-адресом из скриншота.',
+      note: 'Оба номера встретились в одном объявлении о продаже оборудования. Совпадение единичное, вес низкий.'
+    },
+    {
+      id: 'n11', kind: 'geo', label: '55.7558, 37.6173', platform: 'кадр', x: 1000, y: 620,
+      value: '55.7558 N, 37.6173 E', status: 'RESOLVED', weight: 'HARD',
+      method: 'Shadow geometry + SunCalc inverse',
+      geo: 'RU, центр Москвы',
+      links: 'Связан с часовым поясом UTC+3, IP-адресом и публичным альбомом события 2021.',
+      note: 'Высота солнца 56.4 градуса после поправки на наклон стола. Сходится с широтой 55.75 на дату 2025-06-03.'
+    },
+    {
+      id: 'n12', kind: 'geo', label: '185.**.**.14 / AS204601', platform: 'скриншот', x: 790, y: 620,
+      value: '185.**.**.14, AS204601', status: 'EXTRACTED', weight: 'SOFT',
+      method: 'Self-published trace screenshot',
+      geo: 'BY/RU',
+      links: 'Связан с номером +375 29 ***-18-77 и страновой привязкой ASN.',
+      note: 'Фигурант сам опубликовал скриншот трейса. Адрес динамический: привязка к человеку только через время публикации.'
+    },
+    {
+      id: 'n13', kind: 'geo', label: 'UTC+03:00', platform: 'PDF', x: 580, y: 540,
+      value: 'смещение UTC+03:00', status: 'EXTRACTED', weight: 'HARD',
+      method: 'Document metadata timezone (CASE-002)',
+      geo: 'MSK / Minsk / Istanbul',
+      links: 'Связан с корпоративной почтой и геоточкой съёмки.',
+      note: 'Часовой пояс в Create Date документа. Сам по себе город не определяет, но отсекает половину гипотез.'
+    },
+    {
+      id: 'n14', kind: 'geo', label: 'BY / Homiel voblasc', platform: 'GeoIP', x: 1000, y: 800,
+      value: 'BY, Homiel region', status: 'RESOLVED', weight: 'SOFT',
+      method: 'GeoIP / ASN reference lookup',
+      geo: 'BY',
+      links: 'Связан с IP-адресом 185.**.**.14.',
+      note: 'Точность странового уровня. Регион в справочнике ASN указан с вероятностью около 0.7 — в отчёт идёт как гипотеза.'
+    },
+    {
+      id: 'n15', kind: 'identity', label: 'Alex Gates', platform: 'реестр события', x: 1230, y: 340,
+      value: 'Alex Gates', status: 'CONFIRMED', weight: 'HARD',
+      method: 'Conference roster 2021 + public album',
+      geo: 'RU',
+      links: 'Подтверждён двумя независимыми источниками: список участников и инициалы почты из git-коммитов.',
+      note: 'Вывод дела CASE-001. Флаг: FLAG{ALEX_GATES}. Уверенность высокая: два независимых источника, ни один не транзитивный.'
+    },
+    {
+      id: 'n16', kind: 'identity', label: '[REDACTED]', platform: '—', x: 1380, y: 540,
+      value: 'класс данных закрыт', status: 'CLOSED', weight: 'NONE',
+      method: 'НЕ ИЗВЛЕКАЛОСЬ',
+      geo: '—',
+      links: 'Формально связан с установленным ФИО. Содержимое в архиве отсутствует.',
+      note: 'Регламент портала: документные идентификаторы не извлекаются и не хранятся. В графе фиксируется только факт существования класса.'
+    }
+  ];
+
+  var EVIDENCE_LINKS = [
+    { id: 'e01', source: 'n01', target: 'n03', method: 'nickname sweep / sherlock',            weight: 'HARD' },
+    { id: 'e02', source: 'n01', target: 'n04', method: 'nickname sweep / maigret',             weight: 'HARD' },
+    { id: 'e03', source: 'n01', target: 'n05', method: 'nickname sweep + archive snapshot',    weight: 'SOFT' },
+    { id: 'e04', source: 'n01', target: 'n02', method: 'public profile cross-reference',       weight: 'SOFT' },
+    { id: 'e05', source: 'n01', target: 'n06', method: 'avatar pHash match (d=3)',             weight: 'HARD' },
+    { id: 'e06', source: 'n04', target: 'n06', method: 'avatar pHash match (d=1)',             weight: 'HARD' },
+    { id: 'e07', source: 'n02', target: 'n06', method: 'avatar pHash match (d=3)',             weight: 'SOFT' },
+    { id: 'e08', source: 'n03', target: 'n07', method: 'git author email leak (2019)',         weight: 'HARD' },
+    { id: 'e09', source: 'n01', target: 'n08', method: 'public contract thread',               weight: 'HARD' },
+    { id: 'e10', source: 'n07', target: 'n15', method: 'initials + conference roster 2021',    weight: 'HARD' },
+    { id: 'e11', source: 'n08', target: 'n15', method: 'team page snapshot 2024',              weight: 'HARD' },
+    { id: 'e12', source: 'n07', target: 'n09', method: 'messenger parsing',                    weight: 'SOFT' },
+    { id: 'e13', source: 'n09', target: 'n10', method: 'classifieds cross-post 2021',          weight: 'SOFT' },
+    { id: 'e14', source: 'n10', target: 'n12', method: 'self-published trace screenshot',      weight: 'SOFT' },
+    { id: 'e15', source: 'n12', target: 'n14', method: 'GeoIP / ASN lookup',                   weight: 'SOFT' },
+    { id: 'e16', source: 'n12', target: 'n11', method: 'GeoIP city resolution',                weight: 'SOFT' },
+    { id: 'e17', source: 'n13', target: 'n11', method: 'metadata TZ + shadow angle (CASE-003)',weight: 'HARD' },
+    { id: 'e18', source: 'n08', target: 'n13', method: 'PDF producer timezone (CASE-002)',     weight: 'HARD' },
+    { id: 'e19', source: 'n11', target: 'n15', method: 'public event album 2021',              weight: 'HARD' },
+    { id: 'e20', source: 'n05', target: 'n07', method: 'cached post signature',                weight: 'SOFT' },
+    { id: 'e21', source: 'n15', target: 'n16', method: 'НЕ ИЗВЛЕКАЛОСЬ',                       weight: 'CLOSED' }
+  ];
+
+  /* Цепочка демонстрационной трассировки: ник -> почта -> телефон ->
+     мессенджер -> геолокация -> личность. */
+  var TRACE_CHAIN = [
+    { node: 'n01', via: null,  caption: 'ПЕРВИЧНАЯ УЛИКА :: никнейм' },
+    { node: 'n07', via: 'e08', caption: 'ПОЧТА АВТОРА КОММИТОВ' },
+    { node: 'n09', via: 'e12', caption: 'ТЕЛЕФОН ИЗ ПУБЛИЧНОГО ПРОФИЛЯ' },
+    { node: 'n02', via: null,  caption: 'ВТОРОЙ АККАУНТ МЕССЕНДЖЕРА' },
+    { node: 'n11', via: 'e19', caption: 'ГЕОТОЧКА СЪЁМКИ' },
+    { node: 'n15', via: 'e10', caption: 'ЛИЧНОСТЬ УСТАНОВЛЕНА' }
+  ];
+  /* Связи, которыми цепочка реально сшита (для отрисовки в симуляции) */
+  var TRACE_EDGES = [
+    { id: 't1', source: 'n01', target: 'n07', method: 'nickname sweep -> git author email' },
+    { id: 't2', source: 'n07', target: 'n09', method: 'messenger parsing' },
+    { id: 't3', source: 'n09', target: 'n02', method: 'phone bound to second account' },
+    { id: 't4', source: 'n02', target: 'n11', method: 'post geometry -> shadow angle' },
+    { id: 't5', source: 'n11', target: 'n15', method: 'public event album 2021' }
+  ];
+
+  /* ========================================================================
+     3. УТИЛИТЫ
+     ======================================================================== */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function stamp() {
+    var d = new Date();
+    return pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function sleep(ms) { return new Promise(function (r) { window.setTimeout(r, ms); }); }
+  function reduced() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  function byId(id, list) {
+    for (var i = 0; i < list.length; i++) { if (list[i].id === id) { return list[i]; } }
+    return null;
+  }
+  /* #rrggbb -> rgba(r,g,b,a) */
+  function rgba(hex, a) {
+    var h = hex.replace('#', '');
+    var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+  }
+
+  var NODE_INDEX = {};
+  EVIDENCE_NODES.forEach(function (n) { NODE_INDEX[n.id] = n; });
+
+  /* ========================================================================
+     4. КОНСОЛЬ ЯДРА (core-log)
+     ======================================================================== */
+  var coreLog   = $('#core-log');
+  var coreState = $('#core-state');
+  var TYPE_SPEED = 11;   /* мс на символ в режиме печатной машинки */
+  var TYPE_LINE_BUDGET = 180;   /* потолок времени на строку, мс */
+  var typing = false;
+
+  function core_state(name) {
+    if (!coreState) { return; }
+    var map = {
+      idle:  ['IDLE',   'idle'],
+      busy:  ['TRACING','busy'],
+      route: ['ROUTE',  'idle'],
+      error: ['FAULT',  'error']
+    };
+    var c = map[name] || map.idle;
+    coreState.textContent = c[0];
+    coreState.setAttribute('data-state', c[1]);
+  }
+
+  function sys_write(text, cls) {
+    if (!coreLog) { return null; }
+    var line = document.createElement('span');
+    line.className = 'log__line ' + (cls || '');
+    line.innerHTML = '<span class="log__ts">[' + stamp() + ']</span> ' + text;
+    coreLog.appendChild(line);
+    while (coreLog.childNodes.length > 400) { coreLog.removeChild(coreLog.firstChild); }
+    coreLog.scrollTop = coreLog.scrollHeight;
+    return line;
+  }
+
+  /* Печатная машинка: посимвольный вывод с ожиданием завершения */
+  function sys_type(text, cls) {
+    return new Promise(function (resolve) {
+      var line = sys_write('', cls);
+      if (!line) { resolve(); return; }
+      var plain = String(text);
+      if (reduced() || plain.length > 220) {
+        line.innerHTML = '<span class="log__ts">[' + stamp() + ']</span> ' + esc(plain);
+        resolve();
+        return;
+      }
+      typing = true;
+      var i = 0;
+      var prefix = '<span class="log__ts">[' + stamp() + ']</span> ';
+      /* шаг подбираем так, чтобы строка любой длины уложилась в TYPE_LINE_BUDGET */
+      var step = Math.max(2, Math.min(TYPE_SPEED, Math.round(TYPE_LINE_BUDGET / plain.length)));
+      (function next() {
+        i++;
+        line.innerHTML = prefix + esc(plain.slice(0, i)) + (i < plain.length ? '<span class="cursor"></span>' : '');
+        coreLog.scrollTop = coreLog.scrollHeight;
+        if (i < plain.length) {
+          window.setTimeout(next, step);
+        } else {
+          typing = false;
+          resolve();
+        }
+      })();
+    });
+  }
+
+  function sys_clear() {
+    if (coreLog) { coreLog.innerHTML = ''; }
+  }
+
+  /* ========================================================================
+     5. ТРАССИРОВКА МАРШРУТА
+     ------------------------------------------------------------------
+     trace_route(target) — кратчайший неразрывный путь от первичной улики
+     (ROOT_NODE) до целевого узла. Обход неориентированный: улика подтверждает
+     связь в обе стороны. Возвращает { chain, links, hops, reachable }.
+     ======================================================================== */
+  function adjacency(nodes, links) {
+    var adj = {};
+    nodes.forEach(function (n) { adj[n.id] = []; });
+    links.forEach(function (l) {
+      if (adj[l.source] && adj[l.target]) {
+        adj[l.source].push({ to: l.target, link: l.id });
+        adj[l.target].push({ to: l.source, link: l.id });
+      }
+    });
+    return adj;
+  }
+
+  function trace_route(targetId, nodes, links) {
+    nodes = nodes || activeNodes;
+    links = links || activeLinks;
+    var adj = adjacency(nodes, links);
+    if (!adj[targetId] || !adj[ROOT_NODE]) {
+      return { chain: [], links: [], hops: 0, reachable: false };
+    }
+    var queue = [ROOT_NODE];
+    var prev = {};
+    var prevLink = {};
+    var seen = {};
+    seen[ROOT_NODE] = true;
+    while (queue.length) {
+      var cur = queue.shift();
+      if (cur === targetId) { break; }
+      var edges = adj[cur] || [];
+      for (var i = 0; i < edges.length; i++) {
+        var nxt = edges[i].to;
+        if (!seen[nxt]) {
+          seen[nxt] = true;
+          prev[nxt] = cur;
+          prevLink[nxt] = edges[i].link;
+          queue.push(nxt);
+        }
+      }
+    }
+    if (!seen[targetId]) { return { chain: [], links: [], hops: 0, reachable: false }; }
+    var chain = [], linksOut = [], cur2 = targetId;
+    while (cur2 !== ROOT_NODE) {
+      chain.unshift(cur2);
+      linksOut.unshift(prevLink[cur2]);
+      cur2 = prev[cur2];
+    }
+    chain.unshift(ROOT_NODE);
+    return { chain: chain, links: linksOut, hops: chain.length - 1, reachable: true };
+  }
+
+  /* ========================================================================
+     6. СОСТОЯНИЕ ГРАФА
+     ======================================================================== */
+  var activeNodes = [];
+  var activeLinks = [];
+  var selectedId = null;
+  var routeNodes = {};
+  var routeLinks = {};
+
+  function set_graph(nodes, links) {
+    activeNodes = nodes.slice();
+    activeLinks = links.slice();
+    selectedId = null;
+    routeNodes = {};
+    routeLinks = {};
+    if (view) { view.setGraph(activeNodes, activeLinks); }
+    update_counters();
+    update_empty_state();
+  }
+
+  function add_node(nodeId) {
+    var n = byId(nodeId, EVIDENCE_NODES);
+    if (!n || byId(nodeId, activeNodes)) { return false; }
+    activeNodes.push(n);
+    if (view) { view.addNode(n); }
+    update_counters();
+    update_empty_state();
+    return true;
+  }
+
+  function add_link(link) {
+    if (!link) { return false; }
+    for (var i = 0; i < activeLinks.length; i++) { if (activeLinks[i].id === link.id) { return false; } }
+    if (!byId(link.source, activeNodes) || !byId(link.target, activeNodes)) { return false; }
+    activeLinks.push(link);
+    if (view) { view.addLink(link); }
+    update_counters();
+    return true;
+  }
+
+  function update_counters() {
+    var map = {
+      'strip-nodes': activeNodes.length,
+      'strip-links': activeLinks.length,
+      'hud-route': Object.keys(routeLinks).length,
+      'strip-hops': selectedId ? (trace_route(selectedId).hops) : 0
+    };
+    Object.keys(map).forEach(function (k) {
+      var el = document.getElementById(k);
+      if (el) { el.textContent = String(map[k]); }
+    });
+    var gp = $('#graph-path');
+    if (gp) {
+      gp.textContent = 'case:CASE-001 / nodes:' + activeNodes.length + ' / links:' + activeLinks.length;
+    }
+    var hs = $('#hud-sel'), ss = $('#strip-sel');
+    var label = selectedId ? (byId(selectedId, EVIDENCE_NODES) || {}).label || selectedId : '—';
+    if (hs) { hs.textContent = label; }
+    if (ss) { ss.textContent = label; }
+  }
+
+  function update_empty_state() {
+    var el = $('#graph-empty');
+    if (el) { el.style.display = activeNodes.length ? 'none' : 'flex'; }
+  }
+
+  /* ========================================================================
+     7. ДОСЬЕ УЗЛА В КОНСОЛЬ
+     ======================================================================== */
+  function dump_node(nodeId) {
+    var n = byId(nodeId, EVIDENCE_NODES);
+    if (!n) { return; }
+    var kind = KIND[n.kind] || KIND.nick;
+    var route = trace_route(nodeId);
+
+    var deg = 0, inDeg = 0, outDeg = 0, neighbours = [];
+    activeLinks.forEach(function (l) {
+      if (l.source === nodeId) { outDeg++; deg++; neighbours.push(l.target); }
+      else if (l.target === nodeId) { inDeg++; deg++; neighbours.push(l.source); }
+    });
+
+    var colorStyle = 'color:' + kind.color;
+    sys_write('[SELECT]: <b style="' + colorStyle + '">' + esc(n.id) + '</b> // kind=' +
+              kind.label + ' // platform=' + esc(n.platform), 'log--ok');
+    sys_write('[STATUS]: ' + esc(n.status) + ' // [METHOD]: ' + esc(n.method) +
+              ' // [GEO]: ' + esc(n.geo) + (n.links ? '. ' + esc(n.links) : ''));
+    sys_write('[VALUE]: <span style="' + colorStyle + '">' + esc(n.value) + '</span>');
+    sys_write('[LINKS]: ' + deg + ' (' + inDeg + ' in / ' + outDeg + ' out) -> ' +
+              (neighbours.length ? esc(neighbours.join(', ')) : 'нет активных связей'));
+    sys_write('[NOTE]: ' + esc(n.note));
+
+    if (nodeId === ROOT_NODE) {
+      sys_write('[ROUTE]: корень трассировки. Первичная улика, 0 переходов.', 'log--warn');
+    } else if (route.reachable) {
+      var soft = 0;
+      route.links.forEach(function (lid) {
+        var l = byId(lid, activeLinks) || byId(lid, EVIDENCE_LINKS);
+        if (l && l.weight === 'SOFT') { soft++; }
+      });
+      sys_write('[ROUTE]: ' + esc(route.chain.join(' -> ')) + ' // hops=' + route.hops +
+                ' // soft=' + soft + (soft >= 2 ? ' <span class="red">(транзитивная ошибка, выводом не является)</span>' : ''));
+      var conf = soft === 0 ? 'ВЫСОКАЯ' : (soft === 1 ? 'СРЕДНЯЯ' : 'НИЗКАЯ');
+      sys_write('[VERDICT]: уровень уверенности ' + conf + '. Маршрут подсвечен на графе.', 'log--warn');
+    } else {
+      sys_write('[ROUTE]: недостижим от первичной улики в текущем наборе узлов.', 'log--err');
+    }
+    if (n.weight === 'CLOSED' || n.status === 'CLOSED') {
+      sys_write('[DEFENSIVE_ONLY]: класс данных закрыт регламентом. Значение не извлекалось и не хранится.', 'log--err');
+    }
+  }
+
+  function on_select(nodeId) {
+    selectedId = nodeId;
+    routeNodes = {};
+    routeLinks = {};
+    var route = trace_route(nodeId);
+    if (route.reachable) {
+      route.chain.forEach(function (id) { routeNodes[id] = true; });
+      route.links.forEach(function (id) { routeLinks[id] = true; });
+    }
+    routeNodes[nodeId] = true;
+    if (view) { view.highlight(nodeId, routeNodes, routeLinks); }
+    update_counters();
+    dump_node(nodeId);
+    core_state('route');
+  }
+
+  function clear_selection() {
+    selectedId = null;
+    routeNodes = {};
+    routeLinks = {};
+    if (view) { view.highlight(null, {}, {}); }
+    update_counters();
+    sys_write('[SELECT]: выделение сброшено. Показан полный граф без маршрута.');
+    core_state('idle');
+  }
+
+  /* ========================================================================
+     8. СЛОЙ СВЕЧЕНИЯ И ИМПУЛЬСОВ (общий для обоих движков)
+     ------------------------------------------------------------------
+     Провайдер геометрии возвращает пиксельные координаты:
+       nodes() -> [{ id, x, y, color, w, h, state }]
+       links() -> [{ id, points: [{x,y}...], state }]
+     ======================================================================== */
+  function LightLayer(canvas, provider) {
+    var ctx = canvas.getContext('2d');
+    var raf = null;
+    var phases = {};       /* linkId -> { t, speed } */
+    var bursts = {};       /* linkId -> время вспышки */
+    var fpsEl = $('#hud-fps');
+    var frames = 0, lastFps = performance.now();
+
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var r = canvas.getBoundingClientRect();
+      if (!r.width || !r.height) { return; }
+      canvas.width = Math.round(r.width * dpr);
+      canvas.height = Math.round(r.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    /* точка на ломной/квадратной кривой Безье при t in [0,1] */
+    function point_at(pts, t) {
+      if (t < 0) { t = 0; }
+      if (t > 1) { t = 1; }
+      if (pts.length === 2) {
+        return { x: pts[0].x + (pts[1].x - pts[0].x) * t,
+                 y: pts[0].y + (pts[1].y - pts[0].y) * t };
+      }
+      if (pts.length === 3) {
+        var u = 1 - t;
+        return {
+          x: u * u * pts[0].x + 2 * u * t * pts[1].x + t * t * pts[2].x,
+          y: u * u * pts[0].y + 2 * u * t * pts[1].y + t * t * pts[2].y
+        };
+      }
+      /* общий случай: равномерная интерполяция по сегментам */
+      var segs = pts.length - 1;
+      var f = t * segs;
+      var i = Math.min(Math.floor(f), segs - 1);
+      var lt = f - i;
+      return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * lt,
+               y: pts[i].y + (pts[i + 1].y - pts[i].y) * lt };
+    }
+
+    function draw_glow(x, y, color, radius, alpha) {
+      var g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      g.addColorStop(0, rgba(color, alpha));
+      g.addColorStop(0.35, rgba(color, alpha * 0.42));
+      g.addColorStop(1, rgba(color, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    }
+
+    function frame(now) {
+      raf = window.requestAnimationFrame(frame);
+      var geom = provider();
+      if (!geom) { return; }
+      var w = canvas.getBoundingClientRect().width, h = canvas.getBoundingClientRect().height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+
+      /* 1) свечение узлов */
+      geom.nodes.forEach(function (n) {
+        var alpha = n.state === 'dim' ? 0.10 : (n.state === 'selected' ? 0.62 : (n.state === 'route' ? 0.48 : 0.30));
+        var radius = n.state === 'dim' ? 16 : (n.state === 'selected' ? 46 : 36);
+        draw_glow(n.x, n.y, n.color, radius, alpha);
+      });
+
+      /* 2) импульсы трассировки данных */
+      geom.links.forEach(function (l) {
+        if (!l.points || l.points.length < 2) { return; }
+        if (!phases[l.id]) { phases[l.id] = { t: Math.random(), speed: 0.16 }; }
+        var p = phases[l.id];
+        var onRoute = l.state === 'route';
+        var speed = onRoute ? 0.34 : 0.16;
+        var dt = 1 / 60;
+        p.t += speed * dt;
+        if (p.t > 1) { p.t -= 1; }
+
+        var burst = bursts[l.id] || 0;
+        var burstActive = (now - burst) < 900;
+        var count = onRoute ? 3 : (burstActive ? 4 : 2);
+        var color = onRoute ? '#8affb0' : (burstActive ? '#ffffff' : '#33ff33');
+        var size = onRoute ? 4.2 : 3.2;
+
+        if (l.state === 'dim') { count = 0; }
+
+        for (var i = 0; i < count; i++) {
+          var t = (p.t + i / count) % 1;
+          var pt = point_at(l.points, t);
+          ctx.shadowBlur = onRoute ? 14 : 9;
+          ctx.shadowColor = color;
+          ctx.fillStyle = color;
+          ctx.globalAlpha = burstActive ? 0.95 : (onRoute ? 0.85 : 0.6);
+          ctx.fillRect(pt.x - size / 2, pt.y - size / 2, size, size);
+          /* хвост импульса */
+          for (var k = 1; k <= 3; k++) {
+            var tp = point_at(l.points, t - k * 0.022);
+            ctx.globalAlpha = (burstActive ? 0.5 : 0.3) - k * 0.08;
+            var s2 = size - k * 0.7;
+            if (s2 > 0.4) { ctx.fillRect(tp.x - s2 / 2, tp.y - s2 / 2, s2, s2); }
+          }
+        }
+        ctx.globalAlpha = 1;
+        ctx.shadowBlur = 0;
+      });
+
+      ctx.restore();
+
+      frames++;
+      if (now - lastFps >= 1000) {
+        if (fpsEl) { fpsEl.textContent = String(frames); }
+        frames = 0;
+        lastFps = now;
+      }
+    }
+
+    return {
+      start: function () { resize(); if (!raf) { raf = window.requestAnimationFrame(frame); } },
+      stop: function () { if (raf) { window.cancelAnimationFrame(raf); raf = null; } },
+      resize: resize,
+      burst: function (linkId) { bursts[linkId] = performance.now(); },
+      resetPhases: function () { phases = {}; }
+    };
+  }
+
+  /* ========================================================================
+     9. АДАПТЕР: CYTOSCAPE (загрузка с CDN)
+     ======================================================================== */
+  function CytoscapeAdapter(container, lightCanvas) {
+    var cy = null;
+    var light = null;
+
+    var STYLE = [
+      { selector: 'node', style: {
+          'shape': 'rectangle',
+          'width': 'data(w)', 'height': 'data(h)',
+          'background-color': 'data(color)',
+          'background-opacity': 0.92,
+          'border-width': 1, 'border-color': 'data(color)', 'border-opacity': 1,
+          'label': 'data(label)',
+          'font-family': "'Courier New', Courier, Monaco, monospace",
+          'font-size': '9px', 'color': '#8c8c8c',
+          'text-valign': 'bottom', 'text-halign': 'center', 'text-margin-y': 7,
+          'text-wrap': 'ellipsis', 'text-max-width': '110px',
+          'min-zoomed-font-size': 5,
+          'overlay-opacity': 0
+      }},
+      { selector: 'node[kind = "identity"]', style: { 'border-width': 2 } },
+      { selector: 'node.root', style: {
+          'border-width': 2, 'border-color': '#ffffff', 'color': '#ffb000', 'font-size': '10px' } },
+      { selector: 'node.selected', style: {
+          'border-color': '#ffffff', 'border-width': 2, 'color': '#ffffff', 'font-size': '10px' } },
+      { selector: 'node.route', style: { 'color': '#d0d0d0' } },
+      { selector: 'node.dim', style: { 'opacity': 0.18 } },
+      { selector: 'edge', style: {
+          'width': 1, 'line-color': '#1d7a1d', 'curve-style': 'bezier',
+          'target-arrow-shape': 'triangle', 'target-arrow-color': '#1d7a1d',
+          'arrow-scale': 0.65, 'opacity': 0.85,
+          'label': '', 'font-size': '8px', 'color': '#5f7a5f',
+          'text-rotation': 'autorotate', 'text-margin-y': -6
+      }},
+      { selector: 'edge[weight = "SOFT"]', style: { 'line-style': 'dotted', 'line-color': '#2a6b2a' } },
+      { selector: 'edge[weight = "CLOSED"]', style: {
+          'line-style': 'dashed', 'line-color': '#7a1a15', 'target-arrow-color': '#7a1a15', 'opacity': 0.7 } },
+      { selector: 'edge.route', style: {
+          'width': 2, 'line-color': '#33ff33', 'target-arrow-color': '#33ff33', 'line-style': 'solid', 'opacity': 1 } },
+      { selector: 'edge.dim', style: { 'opacity': 0.10 } },
+      { selector: 'edge:hover', style: { 'line-color': '#ffb000' } },
+      { selector: '.cy-hover', style: { 'border-color': '#ffffff' } }
+    ];
+
+    function toElements(nodes, links) {
+      var els = [];
+      nodes.forEach(function (n) {
+        var k = KIND[n.kind] || KIND.nick;
+        els.push({ group: 'nodes', data: {
+          id: n.id, label: n.label, color: k.color, w: k.w, h: k.h, kind: n.kind,
+          ref: n
+        }, position: { x: n.x, y: n.y }, classes: n.id === ROOT_NODE ? 'root' : '' });
+      });
+      links.forEach(function (l) {
+        els.push({ group: 'edges', data: {
+          id: l.id, source: l.source, target: l.target, weight: l.weight || 'HARD', method: l.method
+        }});
+      });
+      return els;
+    }
+
+    function geometryProvider() {
+      if (!cy) { return null; }
+      var nodes = [], links = [];
+      cy.nodes().forEach(function (ele) {
+        var d = ele.data();
+        var p = ele.renderedPosition();
+        var state = ele.hasClass('dim') ? 'dim'
+                  : (ele.hasClass('selected') ? 'selected'
+                  : (ele.hasClass('route') ? 'route' : 'normal'));
+        nodes.push({ id: d.id, x: p.x, y: p.y, color: d.color, w: d.w, h: d.h, state: state });
+      });
+      var z = cy.zoom(), pan = cy.pan();
+      cy.edges().forEach(function (ele) {
+        var s = ele.source(), t = ele.target();
+        if (!s || !t || !s.length || !t.length) { return; }
+        var sp = s.renderedPosition(), tp = t.renderedPosition();
+        var pts = [{ x: sp.x, y: sp.y }];
+        var cp = null;
+        try { cp = ele.controlPoints(); } catch (err) { cp = null; }
+        if (cp && cp.length) {
+          for (var i = 0; i < cp.length; i++) {
+            pts.push({ x: cp[i].x * z + pan.x, y: cp[i].y * z + pan.y });
+          }
+        }
+        pts.push({ x: tp.x, y: tp.y });
+        var state = ele.hasClass('dim') ? 'dim' : (ele.hasClass('route') ? 'route' : 'normal');
+        links.push({ id: ele.data('id'), points: pts, state: state });
+      });
+      return { nodes: nodes, links: links };
+    }
+
+    function init() {
+      cy = window.cytoscape({
+        container: container,
+        elements: toElements(activeNodes, activeLinks),
+        style: STYLE,
+        layout: { name: 'preset', fit: true, padding: 46 },
+        minZoom: 0.3,
+        maxZoom: 3.2,
+        wheelSensitivity: 0.22,
+        pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+        textureOnViewport: true,
+        motionBlur: false,
+        boxSelection: false,
+        selectionType: 'single',
+        autolock: false
+      });
+
+      cy.on('tap', 'node', function (evt) { on_select(evt.target.id()); });
+      cy.on('tap', function (evt) { if (evt.target === cy) { clear_selection(); } });
+      cy.on('mouseover', 'edge', function (evt) {
+        var d = evt.target.data();
+        sys_write('[LINK]: ' + esc(d.id) + ' // ' + esc(d.source) + ' -> ' + esc(d.target) +
+                  ' // [METHOD]: ' + esc(d.method) + ' // weight=' + esc(d.weight));
+      });
+      cy.on('pan zoom resize drag', function () { update_hud(); });
+
+      light = LightLayer(lightCanvas, geometryProvider);
+      light.start();
+      window.addEventListener('resize', function () { light.resize(); });
+      update_hud();
+    }
+
+    function update_hud() {
+      var el = $('#hud-zoom');
+      if (el && cy) { el.textContent = cy.zoom().toFixed(2); }
+    }
+
+    return {
+      name: 'cytoscape',
+      init: init,
+      setGraph: function (nodes, links) {
+        if (!cy) { return; }
+        cy.elements().remove();
+        cy.add(toElements(nodes, links));
+        cy.layout({ name: 'preset', fit: true, padding: 46 }).run();
+        if (light) { light.resetPhases(); }
+        update_hud();
+      },
+      addNode: function (n) {
+        if (!cy) { return; }
+        var k = KIND[n.kind] || KIND.nick;
+        cy.add({ group: 'nodes', data: { id: n.id, label: n.label, color: k.color, w: k.w, h: k.h, kind: n.kind },
+                 position: { x: n.x, y: n.y }, classes: n.id === ROOT_NODE ? 'root' : '' });
+      },
+      addLink: function (l) {
+        if (!cy) { return; }
+        cy.add({ group: 'edges', data: { id: l.id, source: l.source, target: l.target,
+                 weight: l.weight || 'HARD', method: l.method } });
+        if (light) { light.burst(l.id); }
+      },
+      highlight: function (selId, nodeMap, linkMap) {
+        if (!cy) { return; }
+        cy.batch(function () {
+          cy.elements().removeClass('selected route dim');
+          cy.nodes().forEach(function (n) {
+            if (nodeMap[n.id()]) { n.addClass('route'); } else { n.addClass('dim'); }
+          });
+          cy.edges().forEach(function (e) {
+            if (linkMap[e.id()]) { e.addClass('route'); } else { e.addClass('dim'); }
+          });
+          if (selId) {
+            var s = cy.getElementById(selId);
+            if (s.length) { s.removeClass('dim').addClass('selected'); }
+          } else {
+            cy.elements().removeClass('dim route selected');
+          }
+        });
+        update_hud();
+      },
+      relayout: function () {
+        if (!cy) { return; }
+        cy.layout({
+          name: 'cose', animate: true, animationDuration: 700, randomize: false,
+          nodeRepulsion: 9000, idealEdgeLength: 120, edgeElasticity: 90,
+          padding: 46, fit: true, nodeDimensionsIncludeLabels: true
+        }).run();
+      },
+      fit: function () { if (cy) { cy.fit(undefined, 46); } },
+      burst: function (linkId) { if (light) { light.burst(linkId); } },
+      zoomReadout: function () { return cy ? cy.zoom() : 1; }
+    };
+  }
+
+  /* ========================================================================
+     10. ВСТРОЕННЫЙ РЕНДЕРЕР (canvas) — резерв при недоступности CDN
+     ------------------------------------------------------------------
+     Тот же набор данных, та же трассировка, собственный пан/зум и отрисовка.
+     ======================================================================== */
+  function CoreRenderer(container, lightCanvas, baseCanvas) {
+    var ctx = baseCanvas.getContext('2d');
+    var light = null;
+    var view = { scale: 1, tx: 0, ty: 0 };
+    var hoverId = null;
+    var dragging = null;    /* { type:'node'|'pan', id, startX, startY, ox, oy } */
+    var positions = {};     /* локальные Overrides координат после ручного перетаскивания */
+
+    function cssSize() {
+      var r = baseCanvas.getBoundingClientRect();
+      return { w: r.width || 600, h: r.height || 400 };
+    }
+
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var s = cssSize();
+      baseCanvas.width = Math.round(s.w * dpr);
+      baseCanvas.height = Math.round(s.h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (light) { light.resize(); }
+      draw();
+    }
+
+    function fit() {
+      if (!activeNodes.length) { return; }
+      var s = cssSize();
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      activeNodes.forEach(function (n) {
+        var p = pos(n);
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      });
+      var bw = Math.max(maxX - minX, 120), bh = Math.max(maxY - minY, 120);
+      var scale = Math.min((s.w - 120) / bw, (s.h - 140) / bh);
+      scale = Math.max(0.15, Math.min(scale, 2.4));
+      view.scale = scale;
+      view.tx = (s.w - bw * scale) / 2 - minX * scale;
+      view.ty = (s.h - bh * scale) / 2 - minY * scale;
+      var el = $('#hud-zoom');
+      if (el) { el.textContent = scale.toFixed(2); }
+    }
+
+    function pos(n) {
+      var o = positions[n.id];
+      return o ? { x: o.x, y: o.y } : { x: n.x, y: n.y };
+    }
+    function to_px(n) {
+      var p = pos(n);
+      return { x: p.x * view.scale + view.tx, y: p.y * view.scale + view.ty };
+    }
+    function to_model(px, py) {
+      return { x: (px - view.tx) / view.scale, y: (py - view.ty) / view.scale };
+    }
+
+    function nodeRect(n) {
+      var k = KIND[n.kind] || KIND.nick;
+      var p = to_px(n);
+      var w = k.w, h = k.h;
+      return { x: p.x - w / 2, y: p.y - h / 2, w: w, h: h, cx: p.x, cy: p.y };
+    }
+
+    function hit(px, py) {
+      for (var i = activeNodes.length - 1; i >= 0; i--) {
+        var r = nodeRect(activeNodes[i]);
+        if (px >= r.x - 7 && px <= r.x + r.w + 7 && py >= r.y - 7 && py <= r.y + r.h + 7) {
+          return activeNodes[i];
+        }
+      }
+      return null;
+    }
+
+    function stateOf(id, isNode) {
+      if (!selectedId) { return 'normal'; }
+      if (isNode ? routeNodes[id] : routeLinks[id]) {
+        return id === selectedId && isNode ? 'selected' : 'route';
+      }
+      return 'dim';
+    }
+
+    function edgePoints(l) {
+      var a = byId(l.source, activeNodes), b = byId(l.target, activeNodes);
+      if (!a || !b) { return null; }
+      var pa = to_px(a), pb = to_px(b);
+      /* небольшой прогиб, чтобы встречные связи не слипались */
+      var mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
+      var dx = pb.x - pa.x, dy = pb.y - pa.y;
+      var len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var off = Math.min(len * 0.10, 26);
+      return [pa, { x: mx - dy / len * off, y: my + dx / len * off }, pb];
+    }
+
+    function draw() {
+      var s = cssSize();
+      ctx.clearRect(0, 0, s.w, s.h);
+
+      /* связи */
+      activeLinks.forEach(function (l) {
+        var pts = edgePoints(l);
+        if (!pts) { return; }
+        var st = stateOf(l.id, false);
+        var closed = l.weight === 'CLOSED';
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.quadraticCurveTo(pts[1].x, pts[1].y, pts[2].x, pts[2].y);
+        if (st === 'route') { ctx.strokeStyle = '#33ff33'; ctx.lineWidth = 2; ctx.globalAlpha = 1; ctx.setLineDash([]); }
+        else if (st === 'dim') { ctx.strokeStyle = '#1d7a1d'; ctx.lineWidth = 1; ctx.globalAlpha = 0.12; ctx.setLineDash([]); }
+        else if (closed) { ctx.strokeStyle = '#7a1a15'; ctx.lineWidth = 1; ctx.globalAlpha = 0.8; ctx.setLineDash([5, 4]); }
+        else if (l.weight === 'SOFT') { ctx.strokeStyle = '#2a6b2a'; ctx.lineWidth = 1; ctx.globalAlpha = 0.9; ctx.setLineDash([2, 3]); }
+        else { ctx.strokeStyle = '#1d7a1d'; ctx.lineWidth = 1; ctx.globalAlpha = 0.85; ctx.setLineDash([]); }
+        ctx.stroke();
+
+        /* стрелка направления */
+        var t = 0.985;
+        var u = 1 - t;
+        var tip = { x: u*u*pts[0].x + 2*u*t*pts[1].x + t*t*pts[2].x,
+                    y: u*u*pts[0].y + 2*u*t*pts[1].y + t*t*pts[2].y };
+        var ang = Math.atan2(pts[2].y - pts[1].y, pts[2].x - pts[1].x);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = st === 'dim' ? 0.12 : 0.9;
+        ctx.fillStyle = st === 'route' ? '#33ff33' : (closed ? '#7a1a15' : '#1d7a1d');
+        ctx.beginPath();
+        ctx.moveTo(tip.x, tip.y);
+        ctx.lineTo(tip.x - 7 * Math.cos(ang - 0.42), tip.y - 7 * Math.sin(ang - 0.42));
+        ctx.lineTo(tip.x - 7 * Math.cos(ang + 0.42), tip.y - 7 * Math.sin(ang + 0.42));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      });
+
+      /* узлы: жёсткие прямоугольники, без скруглений */
+      activeNodes.forEach(function (n) {
+        var k = KIND[n.kind] || KIND.nick;
+        var r = nodeRect(n);
+        var st = stateOf(n.id, true);
+        ctx.save();
+        ctx.globalAlpha = st === 'dim' ? 0.2 : 1;
+        ctx.fillStyle = n.id === ROOT_NODE ? '#ffd166' : k.color;
+        ctx.fillRect(r.x, r.y, r.w, r.h);
+        ctx.lineWidth = (st === 'selected' || n.id === ROOT_NODE) ? 2 : 1;
+        ctx.strokeStyle = (st === 'selected' || n.id === ROOT_NODE || hoverId === n.id) ? '#ffffff' : k.color;
+        ctx.strokeRect(r.x - 0.5, r.y - 0.5, r.w + 1, r.h + 1);
+        /* подпись */
+        var fs = Math.max(8, Math.min(11, 9 * Math.max(view.scale, 0.8)));
+        ctx.font = fs + "px 'Courier New', Courier, monospace";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = st === 'dim' ? '#4a4a4a' : (st === 'selected' ? '#ffffff' : '#a0a0a0');
+        var text = n.label;
+        if (text.length > 24) { text = text.slice(0, 23) + '…'; }
+        ctx.fillText(text, r.cx, r.y + r.h + 6);
+        ctx.fillStyle = st === 'dim' ? '#3a3a3a' : '#5c5c5c';
+        ctx.font = (fs - 2) + "px 'Courier New', Courier, monospace";
+        ctx.fillText(n.id, r.cx, r.y - fs - 4);
+        ctx.restore();
+      });
+
+      /* провайдер геометрии для светового слоя */
+      geometry = function () {
+        return {
+          nodes: activeNodes.map(function (n) {
+            var k = KIND[n.kind] || KIND.nick;
+            var r = nodeRect(n);
+            return { id: n.id, x: r.cx, y: r.cy, color: n.id === ROOT_NODE ? '#ffd166' : k.color,
+                     w: r.w, h: r.h, state: stateOf(n.id, true) };
+          }),
+          links: activeLinks.map(function (l) {
+            return { id: l.id, points: edgePoints(l) || [], state: stateOf(l.id, false) };
+          })
+        };
+      };
+    }
+
+    var geometry = function () { return { nodes: [], links: [] }; };
+
+    /* --- взаимодействие --- */
+    function localXY(ev) {
+      var r = baseCanvas.getBoundingClientRect();
+      var src = ev.touches && ev.touches[0] ? ev.touches[0] : ev;
+      return { x: src.clientX - r.left, y: src.clientY - r.top };
+    }
+
+    function onDown(ev) {
+      var p = localXY(ev);
+      var n = hit(p.x, p.y);
+      if (n) {
+        var mp = to_model(p.x, p.y);
+        var cur = pos(n);
+        dragging = { type: 'node', id: n.id, dx: cur.x - mp.x, dy: cur.y - mp.y, moved: false };
+      } else {
+        dragging = { type: 'pan', sx: p.x, sy: p.y, tx: view.tx, ty: view.ty, moved: false };
+      }
+      ev.preventDefault();
+    }
+    function onMove(ev) {
+      var p = localXY(ev);
+      if (!dragging) {
+        var h = hit(p.x, p.y);
+        var id = h ? h.id : null;
+        if (id !== hoverId) { hoverId = id; container.style.cursor = id ? 'pointer' : 'crosshair'; draw(); }
+        return;
+      }
+      dragging.moved = true;
+      if (dragging.type === 'node') {
+        var mp = to_model(p.x, p.y);
+        positions[dragging.id] = { x: mp.x + dragging.dx, y: mp.y + dragging.dy };
+      } else {
+        view.tx = dragging.tx + (p.x - dragging.sx);
+        view.ty = dragging.ty + (p.y - dragging.sy);
+      }
+      draw();
+      ev.preventDefault();
+    }
+    function onUp(ev) {
+      if (!dragging) { return; }
+      var wasDrag = dragging.moved;
+      var type = dragging.type, id = dragging.id;
+      dragging = null;
+      if (wasDrag || type !== 'node') { return; }
+      on_select(id);
+    }
+    function onWheel(ev) {
+      ev.preventDefault();
+      var p = localXY(ev);
+      var before = to_model(p.x, p.y);
+      var factor = ev.deltaY < 0 ? 1.12 : 1 / 1.12;
+      view.scale = Math.max(0.15, Math.min(view.scale * factor, 3.2));
+      var after = to_model(p.x, p.y);
+      view.tx += (after.x - before.x) * view.scale;
+      view.ty += (after.y - before.y) * view.scale;
+      var el = $('#hud-zoom');
+      if (el) { el.textContent = view.scale.toFixed(2); }
+      draw();
+    }
+
+    return {
+      name: 'core-renderer',
+      init: function () {
+        baseCanvas.style.pointerEvents = 'auto';
+        baseCanvas.addEventListener('mousedown', onDown);
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+        baseCanvas.addEventListener('wheel', onWheel, { passive: false });
+        baseCanvas.addEventListener('touchstart', onDown, { passive: false });
+        baseCanvas.addEventListener('touchmove', onMove, { passive: false });
+        baseCanvas.addEventListener('touchend', onUp);
+        window.addEventListener('resize', resize);
+        light = LightLayer(lightCanvas, function () { return geometry(); });
+        light.start();
+        resize();
+        fit();
+        draw();
+      },
+      setGraph: function () { positions = {}; resize(); fit(); draw(); },
+      addNode: function () { draw(); },
+      addLink: function (l) { if (light) { light.burst(l.id); } draw(); },
+      highlight: function () { draw(); },
+      relayout: function () { positions = {}; fit(); draw(); },
+      fit: function () { fit(); draw(); },
+      burst: function (linkId) { if (light) { light.burst(linkId); } },
+      zoomReadout: function () { return view.scale; }
+    };
+  }
+
+  /* ========================================================================
+     11. ЗАГРУЗКА ГРАФИЧЕСКОГО ЯДРА
+     ======================================================================== */
+  function loadScript(src, sri, timeout) {
+    return new Promise(function (resolve, reject) {
+      var el = document.createElement('script');
+      el.src = src;
+      el.async = true;
+      if (sri) { el.integrity = sri; el.crossOrigin = 'anonymous'; }
+      var done = false;
+      var timer = window.setTimeout(function () {
+        if (done) { return; }
+        done = true;
+        if (el.parentNode) { el.parentNode.removeChild(el); }
+        reject(new Error('timeout ' + timeout + 'ms'));
+      }, timeout);
+      el.addEventListener('load', function () {
+        if (done) { return; }
+        done = true;
+        window.clearTimeout(timer);
+        resolve();
+      });
+      el.addEventListener('error', function () {
+        if (done) { return; }
+        done = true;
+        window.clearTimeout(timer);
+        reject(new Error('network/sri fault'));
+      });
+      document.head.appendChild(el);
+    });
+  }
+
+  function engine_readout(main, detail, tag) {
+    var a = $('#engine-readout'), b = $('#engine-detail'), t = $('#engine-tag');
+    if (a) { a.textContent = main; }
+    if (b) { b.innerHTML = detail; }
+    if (t) {
+      t.textContent = tag || (/CORE_RENDERER/i.test(main) ? 'CORE'
+                    : (/cytoscape/i.test(main) ? 'LIB' : 'BOOT'));
+    }
+  }
+
+  async function boot_graph_engine() {
+    var container = $('#network-graph');
+    var lightCanvas = $('#light-layer');
+    var baseCanvas = $('#graph-canvas');
+
+    /* Уже подключено локально (self-hosted) — сеть не нужна */
+    if (typeof window.cytoscape === 'function') {
+      engine_readout('[ENGINE]: cytoscape ' + ENGINE_VERSION + ' :: local',
+                     'подключено до загрузки страницы, CDN не использовался', 'LOCAL');
+      return CytoscapeAdapter(container, lightCanvas);
+    }
+
+    for (var i = 0; i < ENGINE_SOURCES.length; i++) {
+      var src = ENGINE_SOURCES[i];
+      sys_write('[ENGINE]: probing ' + esc(src.name) + ' :: cytoscape@' + ENGINE_VERSION);
+      try {
+        await loadScript(src.url, ENGINE_SRI, ENGINE_TIMEOUT);
+        if (typeof window.cytoscape === 'function') {
+          engine_readout('[ENGINE]: cytoscape ' + ENGINE_VERSION + ' :: ' + src.name,
+                         'источник: <span class="green">' + esc(src.url) + '</span> · SRI проверена · MIT', 'CDN');
+          sys_write('[ENGINE]: cytoscape@' + ENGINE_VERSION + ' загружено с ' + esc(src.name) +
+                    ', контрольная сумма совпала.', 'log--ok');
+          return CytoscapeAdapter(container, lightCanvas);
+        }
+        sys_write('[ENGINE]: источник ответил, но глобальный объект не появился.', 'log--err');
+      } catch (err) {
+        sys_write('[ENGINE]: ' + esc(src.name) + ' недоступен :: ' + esc(err.message || err), 'log--err');
+      }
+    }
+
+    engine_readout('[ENGINE]: CORE_RENDERER :: встроенный canvas',
+                   'внешние источники недоступны — граф рисуется собственным рендерером, данные и логика те же',
+                   'CORE');
+    sys_write('[ENGINE]: переключаюсь на встроенный рендерер CORE_RENDERER.', 'log--warn');
+    return CoreRenderer(container, lightCanvas, baseCanvas);
+  }
+
+  /* ========================================================================
+     12. РЕЖИМЫ ГРАФА
+     ======================================================================== */
+  function load_full_graph(quiet) {
+    set_graph(EVIDENCE_NODES, EVIDENCE_LINKS);
+    if (!quiet) {
+      sys_write('[GRAPH]: загружен полный граф дела CASE-001 :: узлов ' +
+                activeNodes.length + ', связей ' + activeLinks.length + '.', 'log--ok');
+      sys_write('[HINT]: клик по узлу поднимает маршрут от первичной улики ' + ROOT_NODE +
+                ' и выгружает досье. Колесо — масштаб.');
+    }
+  }
+
+  function reset_graph() {
+    set_graph([], []);
+  }
+
+  async function run_trace_simulation() {
+    if (running) { return; }
+    running = true;
+    core_state('busy');
+    $('#btn-trace').disabled = true;
+    $('#btn-full').disabled = true;
+
+    reset_graph();
+    await sys_type('[TRACE]: инициализация симуляции. Граф очищен, узлов 0, связей 0.');
+    await sys_type('[TRACE]: цель — построить цепочку от первичной улики до установленной личности.');
+    await sys_type('[TRACE]: интервал добавления узла 1000 мс. Маршрут пересчитывается на каждом шаге.');
+    await sleep(reduced() ? 0 : 400);
+
+    var t0 = Date.now();
+    for (var i = 0; i < TRACE_CHAIN.length; i++) {
+      var step = TRACE_CHAIN[i];
+      var n = byId(step.node, EVIDENCE_NODES);
+
+      /* узел добавляется первым: add_link() требует наличия обоих концов */
+      add_node(step.node);
+
+      /* связь от предыдущего узла цепочки */
+      if (i > 0) {
+        var link = null;
+        for (var j = 0; j < TRACE_EDGES.length; j++) {
+          if (TRACE_EDGES[j].target === step.node && TRACE_EDGES[j].source === TRACE_CHAIN[i - 1].node) {
+            link = TRACE_EDGES[j];
+            break;
+          }
+        }
+        if (!link) {
+          link = { id: 't' + i, source: TRACE_CHAIN[i - 1].node, target: step.node,
+                   method: step.caption.toLowerCase(), weight: 'HARD' };
+        }
+        add_link(link);
+        if (view) { view.burst(link.id); }
+        await sys_type('[LINK]: ' + link.source + ' -> ' + link.target +
+                       ' // [METHOD]: ' + link.method, 'log--warn');
+      }
+
+      /* журнал шага печатается параллельно с секундной паузой:
+         узлы появляются ровно раз в секунду, а не раз в секунду плюс время печати */
+      var report = (function (idx, cap, nd, rid) {
+        return (async function () {
+          await sys_type('[NODE+' + idx + '/' + TRACE_CHAIN.length + ']: ' + cap +
+                         ' :: ' + nd.id + ' "' + nd.label + '" (' + (KIND[nd.kind] || {}).label + ')');
+          await sys_type('[STATUS]: ' + nd.status + ' // [METHOD]: ' + nd.method +
+                         ' // [GEO]: ' + nd.geo + (nd.links ? '. ' + nd.links : ''));
+          var rt = trace_route(rid);
+          if (rt.reachable && rt.hops > 0) {
+            await sys_type('[ROUTE]: ' + rt.chain.join(' -> ') + ' // hops=' + rt.hops);
+          }
+        })();
+      })(i + 1, step.caption, n, step.node);
+
+      if (view) { view.fit(); }
+      update_counters();
+      await Promise.all([sleep(reduced() ? 0 : 1000), report]);
+    }
+
+    var elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    on_select('n15');
+    await sys_type('[TRACE]: цепочка завершена. узлов ' + activeNodes.length + ', связей ' +
+                   activeLinks.length + ', переходов ' + trace_route('n15').hops +
+                   ', время ' + elapsed + ' с.', 'log--ok');
+    await sys_type('[VERDICT]: FLAG{ALEX_GATES} // личность подтверждена двумя независимыми источниками.', 'log--ok');
+    await sys_type('[HINT]: нажмите [ ЗАГРУЗИТЬ ПОЛНЫЙ ГРАФ ], чтобы увидеть всю матрицу дела (16 узлов).');
+
+    core_state('idle');
+    $('#btn-trace').disabled = false;
+    $('#btn-full').disabled = false;
+    running = false;
+  }
+
+  function dump_link_matrix() {
+    sys_write('[DUMP]: начало выгрузки таблицы связей (' + activeLinks.length + ' записей).');
+    activeLinks.forEach(function (l) {
+      sys_write('  ' + esc(l.id) + '  ' + esc(l.source) + ' -> ' + esc(l.target) +
+                '  [' + esc(l.weight || 'HARD') + ']  ' + esc(l.method));
+    });
+    sys_write('[DUMP]: конец выгрузки.', 'log--ok');
+  }
+
+  /* ========================================================================
+     13. СТАРТ
+     ======================================================================== */
+  var view = null;
+  var running = false;
+
+  async function start() {
+    view = await boot_graph_engine();
+    view.init();
+    $('#graph-canvas').style.pointerEvents = (view.name === 'core-renderer') ? 'auto' : 'none';
+
+    load_full_graph(true);
+    sys_write('[BOOT]: ' + KERNEL_ID + ' :: узел связного анализа запущен.', 'log--ok');
+    sys_write('[BOOT]: графическое ядро — ' + esc(view.name) + '. Источник данных — EVIDENCE_NODES/EVIDENCE_LINKS (' +
+              EVIDENCE_NODES.length + '/' + EVIDENCE_LINKS.length + ').');
+    sys_write('[GRAPH]: загружена полная матрица дела CASE-001 :: узлов ' + activeNodes.length +
+              ', связей ' + activeLinks.length + '.', 'log--ok');
+    sys_write('[ROUTE]: корень трассировки — ' + ROOT_NODE + ' (первичная улика).');
+    sys_write('[HINT]: клик по узлу = маршрут + досье. [ RUN TRACE SIMULATION ] = пошаговая сборка цепочки.');
+    core_state('idle');
+
+    $('#btn-trace').addEventListener('click', run_trace_simulation);
+    $('#btn-full').addEventListener('click', function () {
+      load_full_graph(false);
+      if (view) { view.fit(); }
+    });
+    $('#btn-relayout').addEventListener('click', function () {
+      if (view) { view.relayout(); }
+      sys_write('[LAYOUT]: раскладка перестроена (' + (view ? view.name : 'n/a') + ').');
+    });
+    $('#btn-clear-sel').addEventListener('click', clear_selection);
+    $('#btn-clear-log').addEventListener('click', function () {
+      sys_clear();
+      sys_write('[CONSOLE]: журнал очищен.');
+    });
+    $('#btn-dump').addEventListener('click', dump_link_matrix);
+
+    /* горячие клавиши */
+    document.addEventListener('keydown', function (ev) {
+      if (ev.target && /INPUT|TEXTAREA/.test(ev.target.tagName)) { return; }
+      if (ev.key === 't' || ev.key === 'T' || ev.key === 'е') { run_trace_simulation(); }
+      if (ev.key === 'f' || ev.key === 'F' || ev.key === 'а') { load_full_graph(false); if (view) { view.fit(); } }
+      if (ev.key === 'Escape') { clear_selection(); }
+    });
+  }
+
+  /* ========================================================================
+     14. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ======================================================================== */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+  var BOOT_LINES = [
+    ['ok',   'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain','POST ......................... <span class="ok">[ OK ]</span>'],
+    ['ok',   'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',   'tac node :: link-analysis engine ...... probing'],
+    ['ok',   'dataset :: EVIDENCE_NODES 16 / EVIDENCE_LINKS 21'],
+    ['warn', 'dataset :: synthetic, identity class REDACTED'],
+    ['muted','------------------------------------------------'],
+    ['ok',   'DEFENSIVE_ONLY protocol :: ACTIVE'],
+    ['ok',   'trace workstation ready.']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) { bootOverlay.parentNode.removeChild(bootOverlay); }
+      }, 500);
+    }
+  }
+  function runBoot() {
+    var i = 0, timer = null;
+    var skip = document.createElement('button');
+    skip.type = 'button'; skip.className = 'boot-skip'; skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* приватный режим */ }
+      bootFinished();
+    }
+    function step() {
+      if (i >= BOOT_LINES.length) { timer = window.setTimeout(finish, reduced() ? 0 : 380); return; }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduced() ? 0 : (80 + Math.random() * 100));
+    }
+    step();
+  }
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+  if (bootOverlay) { alreadyBooted ? bootFinished() : runBoot(); }
+
+  /* ========================================================================
+     15. ЧАСЫ И ЛИНЕЙКИ
+     ======================================================================== */
+  var clockEl = document.getElementById('clock');
+  function tickClock() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  tickClock();
+  window.setInterval(tickClock, 1000);
+
+  function fitRules() {
+    var rules = $all('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* Старт ядра — после готовности DOM */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+
+})();
+</script>
+
+</body>
+</html>

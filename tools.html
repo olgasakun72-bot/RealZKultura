@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Арсенал 0XTRACE: интерактивный справочник утилит для OSINT и аудита безопасности — назначение, тип, сложность, принцип работы и базовая команда.">
+<meta name="theme-color" content="#050505">
+<title>[0XTRACE] // TOOLS :: АРСЕНАЛ</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="booting">
+
+<div id="boot-overlay" role="status" aria-live="polite" aria-label="Инициализация арсенала"></div>
+
+<noscript>
+  <div class="warning-box" style="margin-top:14px">
+    <strong>[!]</strong> Фильтры и поиск работают на JavaScript. Полный перечень утилит
+    продублирован текстовой таблицей в конце страницы.
+  </div>
+</noscript>
+
+<header class="site-header">
+  <div class="header-top">
+    <a class="brand" href="index.html">[0XTRACE]&nbsp;//&nbsp;REPOSITORY <span class="brand-sub">arsenal/tools</span></a>
+    <div class="header-meta">
+      <span class="ok">[OK]</span> DB <span id="tool-total">0</span> RECORDS &middot; <span id="clock">--:--:--</span> UTC
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">[ГЛАВНАЯ]</a></li>
+      <li><a href="cases.html">[КЕЙСЫ]</a></li>
+      <li><a href="network.html">[ГРАФ]</a></li>
+      <li class="active"><a href="tools.html" aria-current="page">[АРСЕНАЛ]</a></li>
+      <li><a href="cybersec.html">[ЛАБОРАТОРИЯ]</a></li>
+      <li><a href="assistant.html">[CORE_KERNEL]</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <section aria-labelledby="page-title">
+    <h1 id="page-title" class="sr-only">Арсенал утилит</h1>
+
+<pre class="ascii-art" aria-label="Баннер TOOLS">  ______      ___       ___      _          ____    
+  \____\     / \ \     / \ \    | |        / ___\   
+     __     | | | |   | | | |   | |        \___ \   
+     __     | |_| |   | |_| |   | |___      ___) |  
+     __       \___/     \___/   |_____|    |____/   </pre>
+
+    <div class="row mt2" style="justify-content:space-between;align-items:flex-start">
+      <div class="panel" style="flex:1 1 460px">
+        <div class="panel-title">
+          <span class="rule">+---</span><span>НАЗНАЧЕНИЕ РАЗДЕЛА</span><span class="rule">---+</span>
+          <span class="path">arsenal/tools :: reference database</span>
+        </div>
+        <p class="mb1" style="font-size:13.5px">
+          Справочник утилит, которыми реально пользуются при разборе открытых источников и
+          аудите собственного периметра. По каждой записи: тип интерфейса, порог входа,
+          принцип работы и базовая команда, с которой начинают.
+        </p>
+        <p class="mb0 dim" style="font-size:12.5px">
+          Команды даны на документационных адресах RFC&nbsp;5737 (<code>192.0.2.0/24</code>) и
+          на условных доменах. Подставьте свои значения — и только те, на которые у вас есть
+          письменное разрешение.
+        </p>
+      </div>
+      <div class="panel" style="flex:0 1 300px;border-color:var(--red-dim)">
+        <div class="panel-title" style="color:var(--red);border-bottom-color:var(--red-dim)">
+          <span class="rule" style="color:var(--red-dim)">+---</span><span>ПРАВОВОЙ СТАТУС</span><span class="rule" style="color:var(--red-dim)">---+</span>
+        </div>
+        <div class="legal-key">
+          <span class="badge badge--green">[УЧЕБНЫЙ СТЕНД]</span> развёрнут вами, атакуете своё
+          <span class="badge">[БЕЗ ОГРАНИЧЕНИЙ]</span> пассивный анализ открытых данных
+          <span class="badge badge--amber">[ТОЛЬКО СВОИ ДАННЫЕ]</span> проверяете себя или свой периметр
+          <span class="badge badge--red">[ТРЕБУЕТ РАЗРЕШЕНИЯ]</span> активное воздействие на чужую систему
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       ПАНЕЛЬ ФИЛЬТРОВ
+       ============================================================== -->
+  <section aria-labelledby="filter-title">
+    <h2 id="filter-title" class="glitch" data-text="[ ПОИСК ] // ФИЛЬТР АРСЕНАЛА" tabindex="0">[ ПОИСК ] // ФИЛЬТР АРСЕНАЛА</h2>
+
+    <div class="panel">
+      <div class="filterbar">
+        <div class="filter-search">
+          <label for="tool-search">ЗАПРОС <span class="dim">(клавиша «/» — фокус)</span></label>
+          <input type="search" id="tool-search" autocomplete="off" spellcheck="false"
+                 placeholder="sherlock, exiftool, метаданные, nmap, утечк…">
+        </div>
+
+        <div class="filter-group" role="group" aria-label="Категория">
+          <span class="label">КАТЕГОРИЯ</span>
+          <div class="tabbar" id="filter-cat" style="border-bottom:0;margin-bottom:0">
+            <button type="button" class="tab-filter" data-cat="all" aria-selected="true">[ ВСЕ ]</button>
+            <button type="button" class="tab-filter" data-cat="nick" aria-selected="false">[ НИКНЕЙМЫ ]</button>
+            <button type="button" class="tab-filter" data-cat="meta" aria-selected="false">[ МЕТАДАННЫЕ ]</button>
+            <button type="button" class="tab-filter" data-cat="leak" aria-selected="false">[ УТЕЧКИ ]</button>
+            <button type="button" class="tab-filter" data-cat="net" aria-selected="false">[ СЕТЬ ]</button>
+            <button type="button" class="tab-filter" data-cat="sim" aria-selected="false">[ СИМУЛЯТОРЫ ]</button>
+          </div>
+        </div>
+
+        <div class="filter-group" role="group" aria-label="Тип и сложность">
+          <span class="label">ТИП / ПОРОГ ВХОДА</span>
+          <div class="row" style="gap:6px">
+            <select id="filter-type" aria-label="Тип интерфейса">
+              <option value="all">тип: любой</option>
+              <option value="CLI">CLI</option>
+              <option value="Web">Web</option>
+              <option value="GUI">GUI</option>
+              <option value="Docker">Docker</option>
+            </select>
+            <select id="filter-level" aria-label="Сложность">
+              <option value="all">порог: любой</option>
+              <option value="Новичок">Новичок</option>
+              <option value="Профи">Профи</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="label">ВИД ВЫДАЧИ</span>
+          <div class="row" style="gap:6px">
+            <button type="button" id="view-cards" class="btn btn--sm" aria-pressed="true">[ КАРТОЧКИ ]</button>
+            <button type="button" id="view-table" class="btn btn--sm btn--ghost" aria-pressed="false">[ ТАБЛИЦА ]</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span class="label">СБРОС</span>
+          <button type="button" id="filter-reset" class="btn btn--sm btn--danger">[ СБРОСИТЬ ]</button>
+        </div>
+      </div>
+
+      <div class="count-line" id="count-line" role="status" aria-live="polite">
+        [ВЫДАЧА]: загружаю справочник…
+      </div>
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       КАРТОЧКИ / ТАБЛИЦА
+       ============================================================== -->
+  <section aria-labelledby="arsenal-title">
+    <h2 id="arsenal-title" class="glitch" data-text="[ АРСЕНАЛ ] // ТЕРМИНАЛЬНЫЕ КАРТОЧКИ" tabindex="0">[ АРСЕНАЛ ] // ТЕРМИНАЛЬНЫЕ КАРТОЧКИ</h2>
+
+    <div class="tool-grid" id="tool-grid" aria-live="polite"></div>
+
+    <div class="panel" id="tool-table-wrap" style="display:none">
+      <div class="panel-title">
+        <span class="rule">+---</span><span>arsenal.tsv</span><span class="rule">---+</span>
+        <span class="path">плоская выгрузка справочника</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data tools-table" id="tool-table">
+          <caption>Название, категория, тип, порог входа, команда и правовой статус</caption>
+          <thead>
+            <tr>
+              <th>ID</th><th>Утилита</th><th>Категория</th><th>Тип</th>
+              <th>Порог</th><th>Принцип работы</th><th>Базовая команда</th><th>Статус</th>
+            </tr>
+          </thead>
+          <tbody id="tool-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flash flash--info" id="empty-note" style="display:none">
+      [ВЫДАЧА]: по заданным условиям ничего не найдено. Ослабьте фильтр или сбросьте его.
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       КАК ВЫБИРАТЬ ИНСТРУМЕНТ
+       ============================================================== -->
+  <section aria-labelledby="pick-title">
+    <h2 id="pick-title" class="glitch" data-text="[ ПОРЯДОК РАБОТЫ ] // ЧТО ЗАПУСКАТЬ ПЕРВЫМ" tabindex="0">[ ПОРЯДОК РАБОТЫ ] // ЧТО ЗАПУСКАТЬ ПЕРВЫМ</h2>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title"><span class="rule">+---</span><span>OSINT-КОНТУР</span><span class="rule">---+</span></div>
+<pre class="evidence"><span class="c"># типовой порядок, от дешёвого к дорогому</span>
+
+<span class="k">01</span>  <span class="v">exiftool -a -u -G1 file</span>      <span class="c"># метаданные: автор, ПО, часовой пояс</span>
+<span class="k">02</span>  <span class="v">strings -n 8 file | grep -iE "user|home"</span>   <span class="c"># логины и пути</span>
+<span class="k">03</span>  <span class="v">sherlock nickname</span>            <span class="c"># где ещё встречается ник</span>
+<span class="k">04</span>  <span class="v">maigret nickname -a --html</span>   <span class="c"># глубже + извлечение полей профиля</span>
+<span class="k">05</span>  <span class="v">whatsmyname.app/?q=nickname</span>  <span class="c"># ручная проверка гипотез</span>
+<span class="k">06</span>  <span class="v">web.archive.org/web/*/URL</span>    <span class="c"># удалённые профили</span>
+<span class="k">07</span>  <span class="v">holehe mail@example.com</span>      <span class="c"># где зарегистрирована почта</span>
+<span class="k">08</span>  <span class="v">suncalc.org</span> + геометрия тени <span class="c"># хронолокация кадра</span>
+
+<span class="c"># правило: шаг 03-05 даёт гипотезы, а вывод делают только</span>
+<span class="c"># два независимых источника. Один ник на двух площадках — не личность.</span>
+</pre>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><span class="rule">+---</span><span>АУДИТ-КОНТУР</span><span class="rule">---+</span></div>
+<pre class="evidence"><span class="c"># только при письменном разрешении владельца</span>
+
+<span class="k">01</span>  <span class="v">crt.sh/?q=%.example.com</span>      <span class="c"># поддомены из логов сертификатов</span>
+<span class="k">02</span>  <span class="v">testssl.sh --full example.com</span> <span class="c"># TLS: версии, шифры, HSTS</span>
+<span class="k">03</span>  <span class="v">nmap -sV -sC 192.0.2.0/24</span>  <span class="c"># сервисы и версии</span>
+<span class="k">04</span>  <span class="v">nikto -h https://192.0.2.10</span>  <span class="c"># типовые ошибки веб-сервера</span>
+<span class="k">05</span>  <span class="v">zap.sh -cmd -quickurl URL</span>     <span class="c"># быстрый прогон приложения</span>
+<span class="k">06</span>  <span class="v">tshark -i eth0 -w cap.pcap</span>   <span class="c"># захват для разбора в wireshark</span>
+<span class="k">07</span>  <span class="v">gitleaks detect --source .</span>   <span class="c"># секреты в собственной истории</span>
+<span class="k">08</span>  <span class="v">trufflehog filesystem ./</span>     <span class="c"># живые ли найденные ключи</span>
+
+<span class="c"># порядок не случаен: сначала пассивно и дёшево,</span>
+<span class="c"># активное сканирование — после согласования окна и стоп-слова.</span>
+</pre>
+      </div>
+    </div>
+
+    <div class="warning-box mt2">
+      <strong>[ЧТО НЕ ВОШЛО В АРСЕНАЛ НАМЕРЕННО]</strong> Утилиты целевой слежки, автоматизированного
+      перебора чужих учётных записей, пробива по слитым базам персональных данных, генерации
+      вредоносного кода и клонирования банковских интерфейсов. Их существование обсуждается в
+      теоретических разборах <a href="assistant.html">ядра 0xBASE</a>, но в рабочий справочник они
+      не включены: у таких инструментов нет законного бытового применения.
+    </div>
+  </section>
+
+  <!-- ==============================================================
+       СТАТИЧЕСКИЙ ДАМП (для чтения без JS)
+       ============================================================== -->
+  <section aria-labelledby="static-title">
+    <h2 id="static-title" class="glitch" data-text="[ СТАТИЧЕСКИЙ ДАМП ] // ВЕСЬ СПРАВОЧНИК ТЕКСТОМ" tabindex="0">[ СТАТИЧЕСКИЙ ДАМП ] // ВЕСЬ СПРАВОЧНИК ТЕКСТОМ</h2>
+    <div class="panel">
+      <div class="panel-title"><span class="rule">+---</span><span>arsenal.dump</span><span class="rule">---+</span></div>
+<pre class="evidence">
+<span class="c">## КАТЕГОРИЯ: РАЗВЕДКА ПО НИКНЕЙМАМ</span>
+sherlock        <span class="k">CLI</span>  <span class="v">Новичок</span>  обход ~400 площадок по шаблонам URL      <span class="k">$ sherlock crypto_wizard99 --top-sites --csv</span>
+maigret         <span class="k">CLI</span>  <span class="v">Профи</span>    2500+ площадок, извлечение полей, отчёт  <span class="k">$ maigret crypto_wizard99 -a --html --pdf</span>
+whatsmyname     <span class="k">Web</span>  <span class="v">Новичок</span>  ручной справочник совпадений ника        <span class="k">&gt; https://whatsmyname.app/?q=crypto_wizard99</span>
+holehe          <span class="k">CLI</span>  <span class="v">Профи</span>    регистрация почты на сервисах, без писем <span class="k">$ holehe name@example.com --only-used</span>
+wayback         <span class="k">Web</span>  <span class="v">Новичок</span>  снапшоты удалённых страниц и профилей    <span class="k">&gt; https://web.archive.org/web/*/URL</span>
+
+<span class="c">## КАТЕГОРИЯ: АНАЛИЗ МЕТАДАННЫХ</span>
+exiftool        <span class="k">CLI</span>  <span class="v">Новичок</span>  EXIF/XMP/IPTC, автор, ПО, часовой пояс   <span class="k">$ exiftool -a -u -G1 document.pdf</span>
+metadata2go     <span class="k">Web</span>  <span class="v">Новичок</span>  разбор метаданных в браузере             <span class="k">&gt; https://www.metadata2go.com/view-metadata</span>
+strings         <span class="k">CLI</span>  <span class="v">Профи</span>    печатаемые строки бинарного файла        <span class="k">$ strings -n 8 document.pdf | grep -iE "user|home"</span>
+jhead           <span class="k">CLI</span>  <span class="v">Новичок</span>  пакетная очистка EXIF у JPEG             <span class="k">$ jhead -purejpg *.jpg</span>
+suncalc         <span class="k">Web</span>  <span class="v">Профи</span>    положение солнца, обратная задача тени   <span class="k">&gt; https://www.suncalc.org/</span>
+fotoforensics   <span class="k">Web</span>  <span class="v">Профи</span>    ELA: участки с разным уровнем сжатия     <span class="k">&gt; https://fotoforensics.com/</span>
+
+<span class="c">## КАТЕГОРИЯ: МОНИТОРИНГ УТЕЧЕК</span>
+haveibeenpwned  <span class="k">Web</span>  <span class="v">Новичок</span>  адрес и пароль по корпусу утечек         <span class="k">$ curl -s https://api.pwnedpasswords.com/range/5BAA6</span>
+intelx          <span class="k">Web</span>  <span class="v">Профи</span>    поиск по открытым и полузакрытым массивам<span class="k">&gt; https://intelx.io/?s=example.com</span>
+trufflehog      <span class="k">CLI</span>  <span class="v">Профи</span>    секреты в коде + проверка их живости     <span class="k">$ trufflehog filesystem ./ --only-verified</span>
+gitleaks        <span class="k">CLI</span>  <span class="v">Профи</span>    секреты в git-истории, ставится в CI     <span class="k">$ gitleaks detect --source . --verbose</span>
+
+<span class="c">## КАТЕГОРИЯ: СЕТЕВОЙ АУДИТ</span>
+nmap            <span class="k">CLI</span>  <span class="v">Профи</span>    порты, сервисы, версии, скрипты NSE      <span class="k">$ nmap -sV -sC -oA scan 192.0.2.0/24</span>
+masscan         <span class="k">CLI</span>  <span class="v">Профи</span>    асинхронный скан больших диапазонов      <span class="k">$ masscan 192.0.2.0/24 -p1-1024 --rate 1000</span>
+wireshark       <span class="k">GUI</span>  <span class="v">Новичок</span>  разбор трафика по протоколам             <span class="k">$ wireshark -i eth0 -k</span>
+tshark          <span class="k">CLI</span>  <span class="v">Профи</span>    консольный захват и фильтры              <span class="k">$ tshark -i eth0 -f "port 443" -w cap.pcap</span>
+testssl.sh      <span class="k">CLI</span>  <span class="v">Профи</span>    аудит TLS: шифры, цепочка, HSTS          <span class="k">$ testssl.sh --full example.com</span>
+nikto           <span class="k">CLI</span>  <span class="v">Профи</span>    типовые ошибки веб-сервера               <span class="k">$ nikto -h https://192.0.2.10 -o report.html</span>
+owasp-zap       <span class="k">GUI</span>  <span class="v">Профи</span>    прокси-сканер веб-приложений             <span class="k">$ zap.sh -cmd -quickurl https://192.0.2.10</span>
+crt.sh          <span class="k">Web</span>  <span class="v">Профи</span>    поддомены из логов прозрачности          <span class="k">$ curl -s "https://crt.sh/?q=%.example.com&amp;output=json"</span>
+
+<span class="c">## КАТЕГОРИЯ: СИМУЛЯТОРЫ АТАК (санкционированные учения и стенды)</span>
+set             <span class="k">CLI</span>  <span class="v">Профи</span>    сценарии учений по соц. инженерии        <span class="k">$ setoolkit</span>                        <span class="red">[ТРЕБУЕТ РАЗРЕШЕНИЯ]</span>
+gophish         <span class="k">CLI</span>  <span class="v">Профи</span>    платформа фишинговых учений с отчётностью<span class="k">$ ./gophish</span>                        <span class="red">[ТРЕБУЕТ РАЗРЕШЕНИЯ]</span>
+juice-shop      <span class="k">Docker</span> <span class="v">Новичок</span> намеренно уязвимый магазин OWASP       <span class="k">$ docker run --rm -p 3000:3000 bkimminich/juice-shop</span>
+dvwa            <span class="k">Docker</span> <span class="v">Новичок</span> стенд с переключаемым уровнем защиты   <span class="k">$ docker run --rm -it -p 8080:80 vulnerables/web-dvwa</span>
+</pre>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="legal">
+    <strong class="green">[0XTRACE]</strong> // Арсенал. Все утилиты распространяются их
+    авторами самостоятельно; портал приводит только назначение и базовую команду.
+    Инструменты активного воздействия применяются исключительно при письменном разрешении
+    владельца системы.
+  </div>
+  <div class="nowrap">
+    <a href="index.html">[ГЛАВНАЯ]</a> &middot; <a href="cases.html">[КЕЙСЫ]</a> &middot; <a href="network.html">[ГРАФ]</a> &middot; <a href="cybersec.html">[ЛАБОРАТОРИЯ]</a> &middot; <a href="assistant.html">[CORE_KERNEL]</a>
+  </div>
+</footer>
+
+<script>
+/* ==========================================================================
+   TOOLS :: справочник арсенала
+   --------------------------------------------------------------------------
+   База записей прописана вручную. Отрисовка и фильтрация — на чистом JS,
+   без внешних зависимостей. Значения вставляются через textContent/атрибуты,
+   поэтому HTML-инъекция из данных невозможна.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  /* ========================================================================
+     1. СПРАВОЧНИКИ
+     ======================================================================== */
+  var CATS = {
+    nick: { name: 'РАЗВЕДКА ПО НИКНЕЙМАМ', color: '#ffb000' },
+    meta: { name: 'АНАЛИЗ МЕТАДАННЫХ',     color: '#33ff33' },
+    leak: { name: 'МОНИТОРИНГ УТЕЧЕК',     color: '#4d94ff' },
+    net:  { name: 'СЕТЕВОЙ АУДИТ',         color: '#ff3333' },
+    sim:  { name: 'СИМУЛЯТОРЫ АТАК',       color: '#d0d0d0' }
+  };
+
+  /* legal: null — без ограничений | 'own' — только свои данные
+            'auth' — требуется письменное разрешение | 'range' — учебный стенд */
+  var LEGAL = {
+    null_: { text: 'БЕЗ ОГРАНИЧЕНИЙ',   cls: '',            note: 'Пассивная работа с открытыми данными.' },
+    own:   { text: 'ТОЛЬКО СВОИ ДАННЫЕ',cls: 'badge--amber',note: 'Проверяйте собственные аккаунты, почту и свой периметр. Чужие персональные данные требуют законного основания.' },
+    auth:  { text: 'ТРЕБУЕТ РАЗРЕШЕНИЯ',cls: 'badge--red',  note: 'Активное воздействие на чужую систему. Без письменного разрешения владельца (scope, окно, стоп-слово) это правонарушение.' },
+    range: { text: 'УЧЕБНЫЙ СТЕНД',     cls: 'badge--green',note: 'Разворачивается локально и атакуется только вами. Уязвимости намеренные.' }
+  };
+
+  /* ========================================================================
+     2. БАЗА УТИЛИТ (прописана вручную)
+     ======================================================================== */
+  var TOOLS = [
+    /* ---- РАЗВЕДКА ПО НИКНЕЙМАМ ---- */
+    {
+      id: 't01', cat: 'nick', name: 'Sherlock', type: 'CLI', level: 'Новичок', legal: 'own',
+      url: 'https://github.com/sherlock-project/sherlock',
+      desc: 'Обходит сотни площадок по базе шаблонов URL и проверяет, существует ли профиль с указанным ником. Ранжирует совпадения по надёжности, умеет выгружать CSV и проверять только популярные сервисы.',
+      cmd: 'sherlock crypto_wizard99 --top-sites --csv',
+      extra: 'Совпадение ника — гипотеза: имя могли занять после удаления владельца. Проверяйте дату регистрации и аватар.'
+    },
+    {
+      id: 't02', cat: 'nick', name: 'Maigret', type: 'CLI', level: 'Профи', legal: 'own',
+      url: 'https://github.com/soxoj/maigret',
+      desc: 'Развитие подхода Sherlock: тысячи площадок, извлечение из найденных профилей имени, почты, геолокации, дат и перекрёстное связывание аккаунтов между собой. Формирует HTML- и PDF-отчёт с графом связей.',
+      cmd: 'maigret crypto_wizard99 -a --html --pdf',
+      extra: 'Отчёт удобен как черновик, но каждую строку нужно перепроверять: автоматика даёт и ложные совпадения.'
+    },
+    {
+      id: 't03', cat: 'nick', name: 'WhatsMyName', type: 'Web', level: 'Новичок', legal: 'own',
+      url: 'https://whatsmyname.app',
+      desc: 'Веб-справочник совпадений никнейма по открытым сервисам. Работает без установки и хорошо подходит для быстрой ручной проверки гипотез, полученных автоматическим обходом.',
+      cmd: 'https://whatsmyname.app/?q=crypto_wizard99',
+      extra: 'База обновляется сообществом; часть сервисов со временем отваливается — проверяйте ответ вручную.'
+    },
+    {
+      id: 't04', cat: 'nick', name: 'holehe', type: 'CLI', level: 'Профи', legal: 'own',
+      url: 'https://github.com/megadose/holehe',
+      desc: 'Проверяет, зарегистрирован ли указанный e-mail на сервисах из своего списка, используя формы восстановления доступа и регистрации. Письма не отправляются, аккаунт не создаётся.',
+      cmd: 'holehe name@example.com --only-used',
+      extra: 'Ответ зависит от поведения формы конкретного сервиса и может меняться без предупреждения.'
+    },
+    {
+      id: 't05', cat: 'nick', name: 'Wayback Machine', type: 'Web', level: 'Новичок', legal: null,
+      url: 'https://web.archive.org',
+      desc: 'Архивные снапшоты страниц. Удалённый профиль, снятая вакансия или закрытый форум часто продолжают жить в кэше — это основной источник данных по исчезнувшим аккаунтам.',
+      cmd: 'https://web.archive.org/web/*/reddit.com/user/crypto_wizard99',
+      extra: 'Смотрите не только последний снапшот: ранние версии содержат данные, которые автор позже стёр.'
+    },
+
+    /* ---- АНАЛИЗ МЕТАДАННЫХ ---- */
+    {
+      id: 't06', cat: 'meta', name: 'ExifTool', type: 'CLI', level: 'Новичок', legal: null,
+      url: 'https://exiftool.org',
+      desc: 'Эталонный инструмент чтения и записи метаданных: EXIF, XMP, IPTC, сведения о производителе и версии ПО, часовые пояса, история правок документа. Читает практически любой контейнер.',
+      cmd: 'exiftool -a -u -G1 document.pdf',
+      extra: '-a показывает дублирующиеся теги, -u — нестандартные, -G1 группирует по семейству. Для очистки: exiftool -all= out.pdf'
+    },
+    {
+      id: 't07', cat: 'meta', name: 'Metadata2Go', type: 'Web', level: 'Новичок', legal: 'own',
+      url: 'https://www.metadata2go.com',
+      desc: 'Разбор метаданных прямо в браузере, без установки ПО. Показывает полный список тегов и удобно для демонстрации на обучении: видно, сколько файл рассказывает о владельце.',
+      cmd: 'https://www.metadata2go.com/view-metadata',
+      extra: 'Файл уходит на сторонний сервер. Документы с грифом, чужие материалы и рабочие файлы так проверять нельзя — только локальный exiftool.'
+    },
+    {
+      id: 't08', cat: 'meta', name: 'strings (binutils)', type: 'CLI', level: 'Профи', legal: null,
+      url: 'https://www.gnu.org/software/binutils/',
+      desc: 'Вытаскивает печатаемые последовательности из бинарного файла. В документах и образах так находятся пути в домашнем каталоге, логины операционной системы, имена временных файлов и остатки удалённых данных.',
+      cmd: 'strings -n 8 document.pdf | grep -iE "user|home|temp"',
+      extra: 'Пути вида /Users/<login>/ или C:/Users/<login>/AppData — самая частая невольная утечка идентификатора автора.'
+    },
+    {
+      id: 't09', cat: 'meta', name: 'jhead', type: 'CLI', level: 'Новичок', legal: null,
+      url: 'https://www.sentex.net/~mwandel/jhead/',
+      desc: 'Лёгкая пакетная обработка JPEG: читает EXIF, поворачивает снимки по ориентации и очищает служебные сегменты, оставляя только изображение. Удобен как контрмера перед публикацией.',
+      cmd: 'jhead -purejpg *.jpg',
+      extra: 'Очистка метаданных не убирает геометрию кадра: тени и отражения остаются (см. CASE-003).'
+    },
+    {
+      id: 't10', cat: 'meta', name: 'SunCalc', type: 'Web', level: 'Профи', legal: null,
+      url: 'https://www.suncalc.org',
+      desc: 'Расчёт положения солнца для даты и координаты: высота, азимут, фаза и время. В расследованиях используется как обратная задача — по высоте тени восстанавливают широту и время съёмки.',
+      cmd: 'https://www.suncalc.org/#/55.7558,37.6173,12/2025.06.03/12:00/1/3',
+      extra: 'Высота солнца из тени: h = atan(высота_объекта / длина_тени). Обязательна поправка на наклон поверхности.'
+    },
+    {
+      id: 't11', cat: 'meta', name: 'FotoForensics', type: 'Web', level: 'Профи', legal: 'own',
+      url: 'https://fotoforensics.com',
+      desc: 'Error Level Analysis: визуализирует разницу уровней JPEG-сжатия между участками снимка. Вставленные и пересохранённые фрагменты светятся иначе, чем оригинальная область кадра.',
+      cmd: 'https://fotoforensics.com/  (upload or link)',
+      extra: 'ELA показывает лишь подозрительные области. Пересохранение в мессенджере смазывает картину — работайте с оригиналом файла.'
+    },
+
+    /* ---- МОНИТОРИНГ УТЕЧЕК ---- */
+    {
+      id: 't12', cat: 'leak', name: 'Have I Been Pwned', type: 'Web', level: 'Новичок', legal: 'own',
+      url: 'https://haveibeenpwned.com',
+      desc: 'Проверка адреса и пароля по корпусу известных утечек. Пароли проверяются по принципу k-анонимности: на сервер уходит только первые пять символов SHA-1-хеша, а не сам пароль.',
+      cmd: 'curl -s https://api.pwnedpasswords.com/range/5BAA6',
+      extra: 'Проверка чужих адресов — уже работа с персональными данными. Проверяйте свои учётные записи и домен своей организации.'
+    },
+    {
+      id: 't13', cat: 'leak', name: 'Intel X', type: 'Web', level: 'Профи', legal: 'own',
+      url: 'https://intelx.io',
+      desc: 'Поисковая система по открытым и полузакрытым массивам: публичные документы, pastebin-подобные площадки, следы утечек. В корпоративной практике применяется для поиска собственных данных, оказавшихся снаружи периметра.',
+      cmd: 'https://intelx.io/?s=example.com',
+      extra: 'Содержит материалы, полученные незаконным путём. Искать свой периметр — рабочая задача; строить досье на человека — нет. Правовое основание фиксируйте до начала поиска.'
+    },
+    {
+      id: 't14', cat: 'leak', name: 'trufflehog', type: 'CLI', level: 'Профи', legal: null,
+      url: 'https://github.com/trufflesecurity/trufflehog',
+      desc: 'Сканирует git-историю, файловые системы, образы дисков и CI-артефакты на предмет секретов, а затем проверяет, действуют ли найденные ключи. Отличие от простого поиска по шаблонам — верификация.',
+      cmd: 'trufflehog filesystem ./ --only-verified',
+      extra: 'Живой ключ в публичном репозитории — инцидент: отзывайте и выпускайте заново, а не просто удаляйте строку из файла.'
+    },
+    {
+      id: 't15', cat: 'leak', name: 'gitleaks', type: 'CLI', level: 'Профи', legal: null,
+      url: 'https://github.com/gitleaks/gitleaks',
+      desc: 'Быстрый поиск секретов в git-репозитории по набору правил. Ставится в pre-commit-хук и в CI, чтобы ключи не попадали в историю в момент коммита.',
+      cmd: 'gitleaks detect --source . --verbose',
+      extra: 'Работает по истории коммитов, поэтому находит и то, что уже удалили из рабочей копии. Правила расширяются собственным конфигом.'
+    },
+
+    /* ---- СЕТЕВОЙ АУДИТ ---- */
+    {
+      id: 't16', cat: 'net', name: 'Nmap', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://nmap.org',
+      desc: 'Сканирование портов, определение сервисов и их версий, скриптовые проверки NSE. Основа инвентаризации периметра: сначала выясняют, что вообще открыто, и только потом — как это настроено.',
+      cmd: 'nmap -sV -sC -oA scan 192.0.2.0/24',
+      extra: '192.0.2.0/24 — документационный диапазон RFC 5737. В примерах используйте его, чтобы случайно не задеть живой адрес.'
+    },
+    {
+      id: 't17', cat: 'net', name: 'Masscan', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://github.com/robertdavidgraham/masscan',
+      desc: 'Асинхронный сканер для больших диапазонов: не устанавливает полноценное соединение, поэтому работает на порядки быстрее Nmap. Цена — грубость: легко создать инцидент у провайдера и у целевой системы.',
+      cmd: 'masscan 192.0.2.0/24 -p1-1024 --rate 1000',
+      extra: 'Начинайте с низкого --rate. Вне согласованного окна массовое сканирование чужих сетей выглядит как атака.'
+    },
+    {
+      id: 't18', cat: 'net', name: 'Wireshark', type: 'GUI', level: 'Новичок', legal: 'auth',
+      url: 'https://www.wireshark.org',
+      desc: 'Разбор захваченного трафика по протоколам: рукопожатия TLS, DNS-запросы, HTTP, ARP. Лучший способ понять, что реально передаёт приложение, и научиться читать сетевой диалог.',
+      cmd: 'wireshark -i eth0 -k',
+      extra: 'Полезный фильтр для старта: tls.handshake.type == 1 (только ClientHello, видно SNI и версии).'
+    },
+    {
+      id: 't19', cat: 'net', name: 'tshark', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://www.wireshark.org/docs/man-pages/tshark.html',
+      desc: 'Консольная версия Wireshark: захват с фильтром, запись в pcap, извлечение произвольных полей в CSV. Незаменим на серверах без графики и при подготовке приложения к отчёту.',
+      cmd: 'tshark -i eth0 -f "port 443" -w cap.pcap',
+      extra: 'Захват чужого трафика в общей сети — правонарушение. Работайте на своём интерфейсе и в своей лаборатории.'
+    },
+    {
+      id: 't20', cat: 'net', name: 'testssl.sh', type: 'CLI', level: 'Профи', legal: null,
+      url: 'https://testssl.sh',
+      desc: 'Аудит TLS-конфигурации: поддерживаемые версии и шифры, корректность цепочки сертификатов, наличие HSTS, подверженность известным атакам на протокол. Вывод читается как готовый раздел отчёта.',
+      cmd: 'testssl.sh --full example.com',
+      extra: 'Проверка публичного TLS-эндпоинта пассивна по сути, но --full даёт заметную нагрузку: согласуйте время.'
+    },
+    {
+      id: 't21', cat: 'net', name: 'Nikto', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://github.com/sullo/nikto',
+      desc: 'Сканер веб-сервера: устаревшие версии компонентов, опасные и служебные файлы в webroot, типовые ошибки конфигурации, проблемные методы HTTP.',
+      cmd: 'nikto -h https://192.0.2.10 -o report.html',
+      extra: 'Шумный инструмент: его работа сразу видна в логах и в WAF. Это часть согласованного теста, а не разведка.'
+    },
+    {
+      id: 't22', cat: 'net', name: 'OWASP ZAP', type: 'GUI', level: 'Профи', legal: 'auth',
+      url: 'https://www.zaproxy.org',
+      desc: 'Прокси-сканер веб-приложений: перехват и подмена запросов, автоматический обход приложения, поиск классов уязвимостей, формирование отчёта. Есть консольный режим для запуска в конвейере.',
+      cmd: 'zap.sh -cmd -quickurl https://192.0.2.10 -quickout report.html',
+      extra: 'Автоматическое сканирование создаёт данные: запускайте только на тестовом контуре и предупредите владельца.'
+    },
+    {
+      id: 't23', cat: 'net', name: 'crt.sh', type: 'Web', level: 'Профи', legal: null,
+      url: 'https://crt.sh',
+      desc: 'Поиск по логам прозрачности сертификатов: показывает, какие имена действительно выпускались для домена. Основной пассивный способ найти забытые поддомены и тестовые контуры.',
+      cmd: 'curl -s "https://crt.sh/?q=%.example.com&output=json"',
+      extra: 'Логи открыты и неизменяемы: любой выпущенный сертификат виден всем, включая защищаемый периметр.'
+    },
+
+    /* ---- СИМУЛЯТОРЫ АТАК ---- */
+    {
+      id: 't24', cat: 'sim', name: 'SET (Social-Engineer Toolkit)', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://github.com/trustedsec/social-engineer-toolkit',
+      desc: 'Набор сценариев для санкционированных учений по социальной инженерии: шаблоны сбора учётных данных, работа с носителями, демонстрация типовых приёмов давления. Меню консольное, сценарии документируются.',
+      cmd: 'setoolkit',
+      extra: 'Только по договору с работодателем, в согласованном окне и с согласованным кругом участников. Учения «в surprise-режиме» без письменного согласия — не учебный процесс.'
+    },
+    {
+      id: 't25', cat: 'sim', name: 'Gophish', type: 'CLI', level: 'Профи', legal: 'auth',
+      url: 'https://getgophish.com',
+      desc: 'Платформа для планируемых фишинговых учений: группы сотрудников, шаблоны писем, посадочные страницы, статистика открытий и переходов, отчётность по кампании. Поднимается одним бинарником.',
+      cmd: './gophish   # затем https://127.0.0.1:3333',
+      extra: 'Учения измеряют не «кто попался», а время до первого репорта в службу безопасности. Цель — регламент и привычка сообщать, а не наказание.'
+    },
+    {
+      id: 't26', cat: 'sim', name: 'OWASP Juice Shop', type: 'Docker', level: 'Новичок', legal: 'range',
+      url: 'https://owasp.org/www-project-juice-shop/',
+      desc: 'Намеренно уязвимое веб-приложение со встроенными заданиями: инъекции, broken access control, XSS, ошибки бизнес-логики. Каждый класс уязвимости сопровождается подсказкой и разбором.',
+      cmd: 'docker run --rm -p 3000:3000 bkimminich/juice-shop',
+      extra: 'Локальный стенд на http://localhost:3000. Не выносите его в публичный доступ: приложение уязвимо по замыслу.'
+    },
+    {
+      id: 't27', cat: 'sim', name: 'DVWA', type: 'Docker', level: 'Новичок', legal: 'range',
+      url: 'https://github.com/digininja/DVWA',
+      desc: 'Damn Vulnerable Web Application: классический учебный стенд с переключаемым уровнем защиты (low / medium / high / impossible). Наглядно показывает, как одна и та же уязвимость закрывается шаг за шагом.',
+      cmd: 'docker run --rm -it -p 8080:80 vulnerables/web-dvwa',
+      extra: 'Режим impossible — это и есть правильный код. Сравнивайте low и impossible, чтобы увидеть разницу между уязвимой и защищённой реализацией.'
+    }
+  ];
+
+  /* ========================================================================
+     3. УТИЛИТЫ
+     ======================================================================== */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function reduced() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  function legalOf(t) {
+    var key = t.legal === null ? 'null_' : t.legal;
+    return LEGAL[key] || LEGAL.null_;
+  }
+
+  /* ========================================================================
+     4. СОСТОЯНИЕ ФИЛЬТРА
+     ======================================================================== */
+  var filter = { q: '', cat: 'all', type: 'all', level: 'all', view: 'cards' };
+  var grid       = $('#tool-grid');
+  var tableWrap  = $('#tool-table-wrap');
+  var tbody      = $('#tool-tbody');
+  var countLine  = $('#count-line');
+  var emptyNote  = $('#empty-note');
+  var searchEl   = $('#tool-search');
+
+  function normalize(s) {
+    return String(s || '').toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ').trim();
+  }
+
+  /* Обрезаем падежное окончание: «метаданных» и «метаданные» дают одну основу.
+     Работает и для латиницы (инъекций/injection остаётся подстрочным поиском). */
+  var ENDINGS = /(ами|ями|ах|ях|ов|ев|ей|ой|ий|ый|ая|яя|ое|ее|ую|юю|их|ых|ам|ям|ом|ем|ым|им|ие|ье|ия|иям|ы|и|а|я|о|е|у|ю|м|й|ь)$/;
+  function stem(w) {
+    w = normalize(w);
+    if (w.length <= 4) { return w; }
+    return w.replace(ENDINGS, '');
+  }
+
+  /* Индекс записи: сырая строка для точного подстрочного поиска
+     (команды, URL) и набор основ для поиска по русскому тексту. */
+  function build_index(t) {
+    var raw = normalize([t.name, t.desc, t.cmd, t.extra, t.url,
+                         (CATS[t.cat] || {}).name, legalOf(t).text].join(' '));
+    var stems = {};
+    raw.split(/[^a-z0-9а-яё._\/\-]+/).forEach(function (w) {
+      if (!w) { return; }
+      stems[w] = true;
+      var st = stem(w);
+      if (st) { stems[st] = true; }
+    });
+    return { raw: raw, stems: stems };
+  }
+
+  var INDEX = {};
+  TOOLS.forEach(function (t) { INDEX[t.id] = build_index(t); });
+
+  function term_hit(term, idx) {
+    if (!term) { return true; }
+    if (idx.raw.indexOf(term) !== -1) { return true; }
+    var st = stem(term);
+    if (!st) { return false; }
+    if (idx.stems[st]) { return true; }
+    var keys = Object.keys(idx.stems);
+    for (var i = 0; i < keys.length; i++) {
+      if (st.length >= 4 && keys[i].indexOf(st) === 0) { return true; }
+    }
+    return false;
+  }
+
+  function matches(t) {
+    if (filter.cat !== 'all' && t.cat !== filter.cat) { return false; }
+    if (filter.type !== 'all' && t.type.indexOf(filter.type) === -1) { return false; }
+    if (filter.level !== 'all' && t.level !== filter.level) { return false; }
+    if (!filter.q) { return true; }
+    var idx = INDEX[t.id] || build_index(t);
+    var terms = normalize(filter.q).split(' ');
+    for (var i = 0; i < terms.length; i++) {
+      if (!term_hit(terms[i], idx)) { return false; }
+    }
+    return true;
+  }
+
+  function current() {
+    return TOOLS.filter(matches);
+  }
+
+  /* ========================================================================
+     5. ОТРИСОВКА КАРТОЧЕК
+     ======================================================================== */
+  function buildCard(t) {
+    var cat = CATS[t.cat] || { name: t.cat, color: '#a0a0a0' };
+    var legal = legalOf(t);
+
+    var card = document.createElement('article');
+    card.className = 'tool-card';
+    card.style.borderColor = cat.color;
+
+    /* шапка */
+    var head = document.createElement('div');
+    head.className = 'tool-card__head';
+    head.style.background = 'rgba(255,255,255,0.02)';
+
+    var name = document.createElement('span');
+    name.className = 'tool-card__name';
+    name.style.color = cat.color;
+    name.textContent = t.name;
+
+    var idx = document.createElement('span');
+    idx.className = 'tool-card__id';
+    idx.textContent = t.id.toUpperCase();
+
+    head.appendChild(name);
+    head.appendChild(idx);
+
+    /* бейджи */
+    var badges = document.createElement('div');
+    badges.className = 'tool-card__badges';
+    [
+      { text: cat.name, cls: '' },
+      { text: t.type, cls: 'badge--green' },
+      { text: t.level.toUpperCase(), cls: t.level === 'Профи' ? 'badge--amber' : '' },
+      { text: legal.text, cls: legal.cls }
+    ].forEach(function (b) {
+      var s = document.createElement('span');
+      s.className = 'badge ' + b.cls;
+      s.textContent = b.text;
+      badges.appendChild(s);
+    });
+
+    /* принцип работы */
+    var desc = document.createElement('p');
+    desc.className = 'tool-card__desc';
+    desc.textContent = t.desc;
+
+    /* команда */
+    var cmdLabel = document.createElement('span');
+    cmdLabel.className = 'label';
+    cmdLabel.textContent = 'БАЗОВАЯ КОМАНДА (клик — копировать)';
+
+    var cmd = document.createElement('code');
+    cmd.className = 'tool-card__cmd';
+    cmd.textContent = t.cmd;
+    cmd.title = 'Скопировать команду';
+    cmd.setAttribute('tabindex', '0');
+    cmd.setAttribute('role', 'button');
+    cmd.addEventListener('click', function () { copy_cmd(t.cmd, cmd); });
+    cmd.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); copy_cmd(t.cmd, cmd); }
+    });
+
+    /* примечание */
+    var extra = document.createElement('p');
+    extra.className = 'tool-card__extra';
+    extra.textContent = '[HINT]: ' + t.extra;
+
+    /* ссылка */
+    var foot = document.createElement('div');
+    foot.className = 'tool-card__foot';
+    var link = document.createElement('a');
+    link.href = t.url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = '[ ДОКУМЕНТАЦИЯ ]';
+    foot.appendChild(link);
+
+    if (legal.cls === 'badge--red' || legal.cls === 'badge--amber') {
+      var warn = document.createElement('p');
+      warn.className = 'tool-card__legal';
+      warn.textContent = '[!] ' + legal.note;
+      foot.appendChild(warn);
+    }
+
+    card.appendChild(head);
+    card.appendChild(badges);
+    card.appendChild(desc);
+    card.appendChild(cmdLabel);
+    card.appendChild(cmd);
+    card.appendChild(extra);
+    card.appendChild(foot);
+    return card;
+  }
+
+  function copy_cmd(text, el) {
+    function flash(ok) {
+      var old = el.textContent;
+      el.textContent = ok ? '[СКОПИРОВАНО В БУФЕР]' : '[БУФЕР НЕДОСТУПЕН — ВЫДЕЛИТЕ ВРУЧНУЮ]';
+      el.classList.add(ok ? 'is-copied' : 'is-failed');
+      window.setTimeout(function () {
+        el.textContent = old;
+        el.classList.remove('is-copied', 'is-failed');
+      }, 1400);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { flash(true); }, function () { flash(legacy()); });
+    } else {
+      flash(legacy());
+    }
+    function legacy() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+  }
+
+  /* ========================================================================
+     6. ОТРИСОВКА ТАБЛИЦЫ
+     ======================================================================== */
+  function buildRow(t) {
+    var cat = CATS[t.cat] || { name: t.cat, color: '#a0a0a0' };
+    var legal = legalOf(t);
+    var tr = document.createElement('tr');
+
+    function cell(text, cls, color) {
+      var td = document.createElement('td');
+      if (cls) { td.className = cls; }
+      if (color) { td.style.color = color; }
+      td.textContent = text;
+      tr.appendChild(td);
+      return td;
+    }
+
+    cell(t.id.toUpperCase());
+    cell(t.name, 'tools-table__name', cat.color);
+    cell(cat.name);
+    cell(t.type);
+    cell(t.level);
+    cell(t.desc, 'tools-table__desc');
+
+    var tdCmd = document.createElement('td');
+    var code = document.createElement('code');
+    code.className = 'tool-card__cmd';
+    code.textContent = t.cmd;
+    code.title = 'Скопировать команду';
+    code.setAttribute('tabindex', '0');
+    code.setAttribute('role', 'button');
+    code.addEventListener('click', function () { copy_cmd(t.cmd, code); });
+    tdCmd.appendChild(code);
+    tr.appendChild(tdCmd);
+
+    var tdLegal = document.createElement('td');
+    var b = document.createElement('span');
+    b.className = 'badge ' + legal.cls;
+    b.textContent = legal.text;
+    tdLegal.appendChild(b);
+    tr.appendChild(tdLegal);
+
+    return tr;
+  }
+
+  /* ========================================================================
+     7. ОБЩИЙ РЕНДЕР
+     ======================================================================== */
+  function render() {
+    var list = current();
+
+    if (filter.view === 'cards') {
+      grid.style.display = '';
+      tableWrap.style.display = 'none';
+      grid.innerHTML = '';
+      list.forEach(function (t) { grid.appendChild(buildCard(t)); });
+    } else {
+      grid.style.display = 'none';
+      tableWrap.style.display = '';
+      tbody.innerHTML = '';
+      list.forEach(function (t) { tbody.appendChild(buildRow(t)); });
+    }
+
+    emptyNote.style.display = list.length ? 'none' : '';
+
+    var byCat = {};
+    list.forEach(function (t) { byCat[t.cat] = (byCat[t.cat] || 0) + 1; });
+    var parts = Object.keys(CATS).map(function (k) {
+      return k + ':' + (byCat[k] || 0);
+    });
+    countLine.textContent = '[ВЫДАЧА]: найдено ' + list.length + ' из ' + TOOLS.length +
+      '  |  ' + parts.join('  ') +
+      '  |  фильтр: cat=' + filter.cat + ' type=' + filter.type +
+      ' level=' + filter.level + ' q=' + (filter.q ? '"' + filter.q + '"' : '—');
+
+    var total = $('#tool-total');
+    if (total) { total.textContent = String(TOOLS.length); }
+  }
+
+  /* ========================================================================
+     8. ОБВЯЗКА ФИЛЬТРОВ
+     ======================================================================== */
+  if (searchEl) {
+    var deb = null;
+    searchEl.addEventListener('input', function () {
+      window.clearTimeout(deb);
+      deb = window.setTimeout(function () { filter.q = searchEl.value; render(); }, 110);
+    });
+    searchEl.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape') { searchEl.value = ''; filter.q = ''; render(); }
+    });
+  }
+
+  $all('#filter-cat .tab-filter').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      filter.cat = btn.getAttribute('data-cat');
+      $all('#filter-cat .tab-filter').forEach(function (b) {
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      render();
+    });
+  });
+
+  var typeSel = $('#filter-type'), levelSel = $('#filter-level');
+  if (typeSel) { typeSel.addEventListener('change', function () { filter.type = typeSel.value; render(); }); }
+  if (levelSel) { levelSel.addEventListener('change', function () { filter.level = levelSel.value; render(); }); }
+
+  var vc = $('#view-cards'), vt = $('#view-table');
+  function setView(v) {
+    filter.view = v;
+    if (vc) { vc.setAttribute('aria-pressed', v === 'cards' ? 'true' : 'false');
+              vc.classList.toggle('btn--ghost', v !== 'cards'); }
+    if (vt) { vt.setAttribute('aria-pressed', v === 'table' ? 'true' : 'false');
+              vt.classList.toggle('btn--ghost', v !== 'table'); }
+    render();
+  }
+  if (vc) { vc.addEventListener('click', function () { setView('cards'); }); }
+  if (vt) { vt.addEventListener('click', function () { setView('table'); }); }
+
+  var reset = $('#filter-reset');
+  if (reset) {
+    reset.addEventListener('click', function () {
+      filter = { q: '', cat: 'all', type: 'all', level: 'all', view: filter.view };
+      if (searchEl) { searchEl.value = ''; }
+      if (typeSel) { typeSel.value = 'all'; }
+      if (levelSel) { levelSel.value = 'all'; }
+      $all('#filter-cat .tab-filter').forEach(function (b) {
+        b.setAttribute('aria-selected', b.getAttribute('data-cat') === 'all' ? 'true' : 'false');
+      });
+      render();
+      if (searchEl) { searchEl.focus(); }
+    });
+  }
+
+  /* «/» — фокус в поиск */
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== '/' || !searchEl) { return; }
+    var tag = ev.target ? ev.target.tagName : '';
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) { return; }
+    ev.preventDefault();
+    searchEl.focus();
+    searchEl.select();
+  });
+
+  /* ========================================================================
+     9. БУТ-ПОСЛЕДОВАТЕЛЬНОСТЬ
+     ======================================================================== */
+  var BOOT_KEY = 'zt_boot_done_v1';
+  var bootOverlay = document.getElementById('boot-overlay');
+  var AUTH_COUNT = TOOLS.filter(function (t) { return t.legal === 'auth'; }).length;
+  var BOOT_LINES = [
+    ['ok',   'ZEROTRACE BIOS v2.4.1 (c) independent engineers group'],
+    ['plain','POST ......................... <span class="ok">[ OK ]</span>'],
+    ['ok',   'secure channel :: handshake complete (AES-256-GCM)'],
+    ['ok',   'arsenal db :: ' + TOOLS.length + ' records, 5 categories ... loaded'],
+    ['warn', 'arsenal db :: ' + AUTH_COUNT + ' records flagged [ТРЕБУЕТ РАЗРЕШЕНИЯ]'],
+    ['muted','------------------------------------------------'],
+    ['ok',   'DEFENSIVE_ONLY protocol :: ACTIVE'],
+    ['ok',   'reference ready.']
+  ];
+
+  function bootFinished() {
+    document.body.classList.remove('booting');
+    if (bootOverlay) {
+      bootOverlay.classList.add('is-hidden');
+      window.setTimeout(function () {
+        if (bootOverlay && bootOverlay.parentNode) { bootOverlay.parentNode.removeChild(bootOverlay); }
+      }, 500);
+    }
+  }
+  function runBoot() {
+    var i = 0, timer = null;
+    var skip = document.createElement('button');
+    skip.type = 'button'; skip.className = 'boot-skip'; skip.textContent = '[ SKIP ]';
+    skip.addEventListener('click', finish);
+    bootOverlay.appendChild(skip);
+    function finish() {
+      if (timer) { window.clearTimeout(timer); timer = null; }
+      try { window.sessionStorage.setItem(BOOT_KEY, '1'); } catch (e) { /* приватный режим */ }
+      bootFinished();
+    }
+    function step() {
+      if (i >= BOOT_LINES.length) { timer = window.setTimeout(finish, reduced() ? 0 : 380); return; }
+      var item = BOOT_LINES[i++];
+      var line = document.createElement('div');
+      line.className = 'boot-line';
+      line.innerHTML = '<span class="' + item[0] + '">&gt;</span> ' + item[1];
+      bootOverlay.insertBefore(line, skip);
+      timer = window.setTimeout(step, reduced() ? 0 : (80 + Math.random() * 100));
+    }
+    step();
+  }
+  var alreadyBooted = false;
+  try { alreadyBooted = window.sessionStorage.getItem(BOOT_KEY) === '1'; } catch (e) { alreadyBooted = false; }
+  if (bootOverlay) { alreadyBooted ? bootFinished() : runBoot(); }
+
+  /* ========================================================================
+     10. ЧАСЫ И ЛИНЕЙКИ
+     ======================================================================== */
+  var clockEl = document.getElementById('clock');
+  function tickClock() {
+    if (!clockEl) { return; }
+    var d = new Date();
+    clockEl.textContent = pad2(d.getUTCHours()) + ':' + pad2(d.getUTCMinutes()) + ':' + pad2(d.getUTCSeconds());
+  }
+  tickClock();
+  window.setInterval(tickClock, 1000);
+
+  function fitRules() {
+    var rules = $all('.ascii-rule');
+    for (var i = 0; i < rules.length; i++) {
+      var el = rules[i];
+      var chars = Math.floor((el.clientWidth || 900) / 7.2);
+      if (chars < 20) { chars = 20; }
+      if (chars > 120) { chars = 120; }
+      var body = '';
+      for (var j = 0; j < chars - 2; j++) { body += '-'; }
+      el.textContent = '+' + body + '+';
+    }
+  }
+  fitRules();
+  window.addEventListener('resize', fitRules);
+
+  /* ========================================================================
+     11. СТАРТ
+     ======================================================================== */
+  render();
+
+})();
+</script>
+
+</body>
+</html>
